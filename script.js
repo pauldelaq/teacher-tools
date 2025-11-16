@@ -9,6 +9,7 @@ const closeEditingInterface = document.getElementById("close-editing-interface")
 const saveEditBtn = document.getElementById("save-edit");
 const editorBody = document.getElementById("editor-body");
 const worksheet = document.getElementById("worksheet");
+let currentEditingBlockId = null;
 let exerciseBlocks = [
  {
     id: 1,
@@ -69,6 +70,8 @@ function renderExerciseTypes() {
 function renderExerciseBlocks() {
     worksheet.innerHTML = "";
     exerciseBlocks.forEach(block => {
+        const { editBtn, deleteBtn, contentContainer, wrapper } = createBlockWrapper(block);
+
         let blockElement;
 
         if (block.type === "title") {
@@ -78,9 +81,41 @@ function renderExerciseBlocks() {
         }
 
         if (blockElement) {
-            worksheet.appendChild(blockElement);
+            contentContainer.appendChild(blockElement);
+            worksheet.appendChild(wrapper);
         }
     })
+}
+
+function createBlockWrapper(block) {
+    const wrapper = document.createElement("div");
+    wrapper.classList.add("exercise-block");
+    wrapper.dataset.blockId = block.id;
+
+    const contentContainer = document.createElement("div");
+    contentContainer.classList.add("block-content");
+
+    const toolbar = document.createElement("div");
+    toolbar.classList.add("block-toolbar");
+
+    const editBtn = document.createElement("button");
+    editBtn.innerHTML = `<img src="assets/edit.svg">`;
+    editBtn.classList.add("edit-btn");
+
+    const deleteBtn = document.createElement("button");
+    deleteBtn.innerHTML = `<img src="assets/remove.svg">`;
+    deleteBtn.classList.add("delete-btn");
+
+    editBtn.addEventListener("click", () => editExercise(block.id));
+    deleteBtn.addEventListener("click", () => deleteExercise(block.id));
+
+    toolbar.appendChild(editBtn);
+    toolbar.appendChild(deleteBtn);
+
+    wrapper.appendChild(contentContainer);
+    wrapper.appendChild(toolbar);
+
+    return { editBtn, deleteBtn, contentContainer, wrapper }
 }
 
 function openEditorForType(caption, fn) {
@@ -94,11 +129,35 @@ function saveEdit() {
     alert("Saved");
 }
 
+function editExercise(blockId) {
+    currentEditingBlockId = blockId;
+
+    const block = exerciseBlocks.find(b => b.id === blockId);
+    if (!block) return;
+
+    showMenu(editingInterface);
+
+    const typeConfig = exerciseTypes.find(t => t.id === block.type);
+    const caption = typeConfig ? typeConfig.buttonCaption : "";
+    exerciseType.textContent = `Edit ${caption}`
+
+    editorBody.innerHTML = "";
+
+    if (block.type === "title") {
+        createTitleText(block.data.text);
+    }
+}
+
+function deleteExercise(blockId) {
+    exerciseBlocks = exerciseBlocks.filter(block => block.id !== blockId);
+    renderExerciseBlocks();
+}
+
 // functions for individual exercises
 
-function createTitleText() {
+function createTitleText(initialText = "") {
     exerciseDescription.textContent = "Please type the text for your title in the text area.";
-    editorBody.innerHTML = `<textarea class="text-box"></textarea>`
+    editorBody.innerHTML = `<textarea class="text-box">${initialText}</textarea>`
 }
 
 function createInstructionText() {
@@ -115,5 +174,9 @@ closeExerciseMenuBtn.addEventListener("click", () => closeMenu(createExerciseMen
 closeEditingInterface.addEventListener("click", () => closeMenu(editingInterface));
 saveEditBtn.addEventListener("click", () => saveEdit());
 
+// Stuff to happen upon page load
+
 renderExerciseTypes();
 renderExerciseBlocks();
+
+// Stuff that should happen only after rendering main content

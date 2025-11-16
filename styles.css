@@ -87,6 +87,31 @@ header h1 {
     gap: 1rem;
 }
 
+.exercise-block {
+    background-color: white;
+    padding: 1em;
+}
+
+.exercise-block:hover {
+    background-color: lightgray;
+    border-radius: 10px;
+}
+
+.block-content {
+    width: 100%;
+}
+
+.block-toolbar {
+    color: red;
+}
+
+.edit-btn, .delete-btn {
+    background-color: white;
+    height: 50px;
+    width: 50px;
+    border-radius: 30%;
+}
+
 .text-box {
     width: 100%;
     height: 8em;
