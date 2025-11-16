@@ -12,16 +12,20 @@
     <body>
         <div id="create-exercise-menu" class="menu-overlay hidden">
             <h1>What kind of exercise do you want to create?</h1>
-            <button id="close-exercise-menu" class="close-menu">X</button>
+            <button id="close-exercise-menu" class="menu-buttons">X</button>
             <div id="exercise-list-display" class="exercise-list"></div>
         </div>
         <div id="editing-interface" class="menu-overlay hidden">
-            <h1 id="exercise-type">Type of exercise goes here</h1>
-            <button id="close-editing-interface" class="close-menu">X</button>
+            <h1 id="exercise-type" class="exercise-type">Type of exercise goes here</h1>
+            <h2 id="exercise-description"></h2>
+            <div id="editor-body"></div>
+            <button id="save-edit" class="menu-buttons">Save</button>
+            <button id="close-editing-interface" class="menu-buttons">Close</button>
             <div id="editing-tools-display" class="editing-tools-display"></div>
         </div>
         <main>
             <h1>Please press the "+" button to add an exercise.</h1>
+            <div id="worksheet"></div>
             <button id="add-button" class="add-button">+</button>
         </main>
         <script src="script.js"></script>

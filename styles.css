@@ -31,9 +31,8 @@ body {
     padding: 1em;
 }
 
-.close-menu {
+.menu-buttons {
     font-size: 36px;
-    width: 1.5em;
     height: 1.5em;
 }
 
@@ -78,8 +77,18 @@ header h1 {
     font-size: 16px;
 }
 
+.exercise-type {
+    text-align: center;
+}
+
 .exercise-list {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
+}
+
+.text-box {
+    width: 100%;
+    height: 8em;
+    font-size: 24px;
 }
