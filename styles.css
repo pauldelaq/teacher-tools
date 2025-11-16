@@ -1,0 +1,85 @@
+* {
+  font-family: Arial;
+  box-sizing: border-box;
+}
+
+:root {
+    --header-height: 60px;
+}
+
+body {
+    padding-top: var(--header-height);
+    margin: 0;
+    padding-left: 1em;
+    padding-right: 1em;
+}
+
+.add-button {
+  font-size: 96px;
+  width: 1.5em;
+  height: 1.5em;
+}
+
+.menu-overlay {
+    position: fixed;
+    height: calc(100vh - var(--header-height));
+    width: 100vw;
+    top: var(--header-height);
+    left: 0;
+    z-index: 2;
+    background-color: white;
+    padding: 1em;
+}
+
+.close-menu {
+    font-size: 36px;
+    width: 1.5em;
+    height: 1.5em;
+}
+
+.hidden {
+    display: none;
+}
+
+header {
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--header-height);
+    width: 100vw;
+    background-color: lightgray;
+    border-bottom: solid 1px black;
+    position: fixed;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+header h1 {
+    text-align: center;
+}
+
+.exercise-button-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 1em;
+}
+
+.exercise-button-caption {
+    text-align: center;
+    font-size: 24px;
+}
+
+.exercise-type-button {
+    height: 250px;
+    width: 250px;
+    font-size: 16px;
+}
+
+.exercise-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+}
