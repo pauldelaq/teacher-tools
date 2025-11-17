@@ -10,6 +10,7 @@ const saveEditBtn = document.getElementById("save-edit");
 const editorBody = document.getElementById("editor-body");
 const worksheet = document.getElementById("worksheet");
 let currentEditingBlockId = null;
+let currentEditingType = null;
 let exerciseBlocks = [
  {
     id: 1,
@@ -59,7 +60,7 @@ function renderExerciseTypes() {
         exerciseTypeButton.innerText = el.buttonContent;
         exerciseTypeButton.classList.add("exercise-type-button");
         exerciseTypeButton.id = el.id;
-        exerciseTypeButton.addEventListener("click", () => openEditorForType(el.buttonCaption, el.buttonFunction));
+        exerciseTypeButton.addEventListener("click", () => openEditorForType(el.buttonCaption, el.buttonFunction, el.id));
         exerciseButtonWrapper.appendChild(exerciseTypeButton);
         exerciseButtonWrapper.appendChild(exerciseButtonCaption);
         exerciseListDisplay.appendChild(exerciseButtonWrapper);
@@ -118,7 +119,10 @@ function createBlockWrapper(block) {
     return { editBtn, deleteBtn, contentContainer, wrapper }
 }
 
-function openEditorForType(caption, fn) {
+function openEditorForType(caption, fn, typeId) {
+    currentEditingBlockId = null;
+    currentEditingType = typeId;
+
     closeMenu(createExerciseMenu);
     showMenu(editingInterface);
     exerciseType.textContent = `Create ${caption}`;
@@ -126,6 +130,29 @@ function openEditorForType(caption, fn) {
 }
 
 function saveEdit() {
+    const textarea = editorBody.querySelector(".text-box");
+    if (!textarea) return;
+
+    const value = textarea.value;
+
+    if (currentEditingBlockId !== null) {
+        const block = exerciseBlocks.find(b => b.id === currentEditingBlockId);
+        if (block) {
+            block.data.text = value;
+        }
+    }
+
+    if (currentEditingBlockId === null && currentEditingType) {
+        const newId = exerciseBlocks.length ? Math.max(...exerciseBlocks.map(b => b.id)) + 1 : 1;
+
+        exerciseBlocks.push({
+            id: newId,
+            type: currentEditingType,
+            data: { text: value }
+        });
+    }
+
+    renderExerciseBlocks();
     alert("Saved");
 }
 
@@ -135,17 +162,25 @@ function editExercise(blockId) {
     const block = exerciseBlocks.find(b => b.id === blockId);
     if (!block) return;
 
+    // remember what type we are editing
+    currentEditingType = block.type;
+
+    // find the type config from exerciseTypes
+    const typeConfig = exerciseTypes.find(t => t.id === block.type);
+    if (!typeConfig) return;
+
+    // open the editor interface
     showMenu(editingInterface);
 
-    const typeConfig = exerciseTypes.find(t => t.id === block.type);
-    const caption = typeConfig ? typeConfig.buttonCaption : "";
-    exerciseType.textContent = `Edit ${caption}`
+    const caption = typeConfig.buttonCaption;
+    exerciseType.textContent = `Edit ${caption}`;
 
+    // clear previous editor content
     editorBody.innerHTML = "";
 
-    if (block.type === "title") {
-        createTitleText(block.data.text);
-    }
+    // call the type's editor-builder function with existing data
+    // for simple text-based types (title, instruction) we pass block.data.text
+    typeConfig.buttonFunction(block.data && block.data.text ? block.data.text : "");
 }
 
 function deleteExercise(blockId) {
@@ -160,9 +195,9 @@ function createTitleText(initialText = "") {
     editorBody.innerHTML = `<textarea class="text-box">${initialText}</textarea>`
 }
 
-function createInstructionText() {
+function createInstructionText(initialText = "") {
     exerciseDescription.textContent = "Please type the text for your instruction/note in the text area.";
-    editorBody.innerHTML = `<textarea class="text-box"></textarea>`
+    editorBody.innerHTML = `<textarea class="text-box">${initialText}</textarea>`;
 }
 
 function createScrambledSentences() {
