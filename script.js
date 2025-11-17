@@ -4,6 +4,7 @@ const exerciseListDisplay = document.getElementById("exercise-list-display");
 const closeExerciseMenuBtn = document.getElementById("close-exercise-menu");
 const exerciseType = document.getElementById("exercise-type");
 const exerciseDescription = document.getElementById("exercise-description");
+const headingContainer = document.getElementById("heading-container");
 const editingInterface = document.getElementById("editing-interface");
 const closeEditingInterface = document.getElementById("close-editing-interface");
 const saveEditBtn = document.getElementById("save-edit");
@@ -81,6 +82,28 @@ function renderExerciseBlocks() {
             blockElement = generatedTitle;
         }
 
+        if (block.type === "instruction") {
+            const generatedPar = document.createElement("p");
+            generatedPar.textContent = block.data.text;
+            blockElement = generatedPar;
+        }
+
+        if (block.type === "scrambled-sentence") {
+            const generatedSenContainer = document.createElement("div");
+
+            if (block.data.heading) {
+                const headingPar = document.createElement("p");
+                headingPar.textContent = block.data.heading;
+                generatedSenContainer.appendChild(headingPar);
+            }
+
+            const scrambledSenText = document.createElement("p");
+            scrambledSenText.textContent = block.data.text;
+            generatedSenContainer.appendChild(scrambledSenText);
+
+            blockElement = generatedSenContainer;
+        }
+
         if (blockElement) {
             contentContainer.appendChild(blockElement);
             worksheet.appendChild(wrapper);
@@ -113,8 +136,8 @@ function createBlockWrapper(block) {
     toolbar.appendChild(editBtn);
     toolbar.appendChild(deleteBtn);
 
-    wrapper.appendChild(contentContainer);
     wrapper.appendChild(toolbar);
+    wrapper.appendChild(contentContainer);
 
     return { editBtn, deleteBtn, contentContainer, wrapper }
 }
@@ -130,25 +153,48 @@ function openEditorForType(caption, fn, typeId) {
 }
 
 function saveEdit() {
-    const textarea = editorBody.querySelector(".text-box");
-    if (!textarea) return;
+    const bodyTextarea = editorBody.querySelector(".text-box");
+    if (!bodyTextarea) return;
 
-    const value = textarea.value;
+    const headingTextarea = headingContainer.querySelector(".heading-input");
+
+    const bodyValue = bodyTextarea.value;
+    const headingValue = headingTextarea ? headingTextarea.value : "";
 
     if (currentEditingBlockId !== null) {
         const block = exerciseBlocks.find(b => b.id === currentEditingBlockId);
         if (block) {
-            block.data.text = value;
+            if (block.type === "scrambled-sentence") {
+                block.data = {
+                    heading: headingValue,
+                    text: bodyValue
+                };
+            } else {
+                block.data.text = bodyValue;
+            }
         }
     }
 
     if (currentEditingBlockId === null && currentEditingType) {
         const newId = exerciseBlocks.length ? Math.max(...exerciseBlocks.map(b => b.id)) + 1 : 1;
 
+        let data;
+
+        if (currentEditingType === "scrambled-sentence") {
+            data = {
+                heading: headingValue,
+                text: bodyValue
+            };
+        } else {
+            data = {
+                text: bodyValue
+            };
+        }
+
         exerciseBlocks.push({
             id: newId,
             type: currentEditingType,
-            data: { text: value }
+            data
         });
     }
 
@@ -180,7 +226,11 @@ function editExercise(blockId) {
 
     // call the type's editor-builder function with existing data
     // for simple text-based types (title, instruction) we pass block.data.text
-    typeConfig.buttonFunction(block.data && block.data.text ? block.data.text : "");
+    if (block.type === "scrambled-sentence") {
+        typeConfig.buttonFunction(block.data || {});
+    } else {
+        typeConfig.buttonFunction(block.data && block.data.text ? block.data.text : "");
+    }
 }
 
 function deleteExercise(blockId) {
@@ -191,17 +241,27 @@ function deleteExercise(blockId) {
 // functions for individual exercises
 
 function createTitleText(initialText = "") {
+    headingContainer.innerHTML = "";
     exerciseDescription.textContent = "Please type the text for your title in the text area.";
     editorBody.innerHTML = `<textarea class="text-box">${initialText}</textarea>`
 }
 
 function createInstructionText(initialText = "") {
+    headingContainer.innerHTML = "";
     exerciseDescription.textContent = "Please type the text for your instruction/note in the text area.";
     editorBody.innerHTML = `<textarea class="text-box">${initialText}</textarea>`;
 }
 
-function createScrambledSentences() {
-    exerciseDescription.textContent = "Please type the sentences you wish to use in the text area."
+function createScrambledSentences(data = { heading: "", text: "" }) {
+    headingContainer.innerHTML = `
+        <label for="scramble-heading">Instruction (Optional):</label>
+        <textarea id="scramble-heading" class="heading-input" placeholder="Unscramble the following sentences.">${data.heading || ""}</textarea> 
+    `;
+
+    exerciseDescription.textContent = "Please type the sentences you wish to use in the text area.";
+    editorBody.innerHTML = `
+    <textarea class="text-box">${data.text || ""}</textarea>
+    `
 }
 
 addExerciseBtn.addEventListener("click", () => showMenu(createExerciseMenu));
