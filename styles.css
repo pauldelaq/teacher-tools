@@ -110,6 +110,7 @@ header h1 {
     height: 50px;
     width: 50px;
     border-radius: 30%;
+    user-select: none;
 }
 
 .text-box {

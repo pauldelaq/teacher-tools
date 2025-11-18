@@ -4,6 +4,7 @@ const exerciseListDisplay = document.getElementById("exercise-list-display");
 const closeExerciseMenuBtn = document.getElementById("close-exercise-menu");
 const exerciseType = document.getElementById("exercise-type");
 const exerciseDescription = document.getElementById("exercise-description");
+const addFirstExerciseText = document.getElementById("add-first-exercise-text");
 const headingContainer = document.getElementById("heading-container");
 const editingInterface = document.getElementById("editing-interface");
 const closeEditingInterface = document.getElementById("close-editing-interface");
@@ -16,7 +17,7 @@ let exerciseBlocks = [
  {
     id: 1,
     type: "title",
-    data: { text: "Chemistry 101 with Professor White" }
+    data: { text: "My Worksheet" }
   }
 ];
 const exerciseTypes = [
@@ -71,6 +72,11 @@ function renderExerciseTypes() {
 
 function renderExerciseBlocks() {
     worksheet.innerHTML = "";
+    if (exerciseBlocks.length === 0) {
+        addFirstExerciseText.classList.remove("hidden");
+    } else {
+        addFirstExerciseText.classList.add("hidden");
+    }
     exerciseBlocks.forEach(block => {
         const { editBtn, deleteBtn, upBtn, downBtn, contentContainer, wrapper } = createBlockWrapper(block);
 
@@ -269,7 +275,7 @@ function moveDown(blockId) {
     const temp = exerciseBlocks[index + 1];
     exerciseBlocks[index + 1] = exerciseBlocks[index];
     exerciseBlocks[index] = temp;
-    
+
     renderExerciseBlocks();
 }
 
