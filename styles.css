@@ -105,7 +105,7 @@ header h1 {
     color: red;
 }
 
-.edit-btn, .delete-btn {
+.toolbar-btns {
     background-color: white;
     height: 50px;
     width: 50px;

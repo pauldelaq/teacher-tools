@@ -72,7 +72,7 @@ function renderExerciseTypes() {
 function renderExerciseBlocks() {
     worksheet.innerHTML = "";
     exerciseBlocks.forEach(block => {
-        const { editBtn, deleteBtn, contentContainer, wrapper } = createBlockWrapper(block);
+        const { editBtn, deleteBtn, upBtn, downBtn, contentContainer, wrapper } = createBlockWrapper(block);
 
         let blockElement;
 
@@ -124,22 +124,35 @@ function createBlockWrapper(block) {
 
     const editBtn = document.createElement("button");
     editBtn.innerHTML = `<img src="assets/edit.svg">`;
-    editBtn.classList.add("edit-btn");
+    editBtn.classList.add("toolbar-btns");
 
     const deleteBtn = document.createElement("button");
     deleteBtn.innerHTML = `<img src="assets/remove.svg">`;
-    deleteBtn.classList.add("delete-btn");
+    deleteBtn.classList.add("toolbar-btns");
+
+    const upBtn = document.createElement("button");
+    upBtn.innerHTML = `<img src="assets/up.svg">`;
+    upBtn.classList.add("toolbar-btns");
+
+    const downBtn = document.createElement("button");
+    downBtn.innerHTML = `<img src="assets/down.svg">`;
+    downBtn.classList.add("toolbar-btns");
+
 
     editBtn.addEventListener("click", () => editExercise(block.id));
     deleteBtn.addEventListener("click", () => deleteExercise(block.id));
+    upBtn.addEventListener("click", () => moveUp(block.id));
+    downBtn.addEventListener("click", () => moveDown(block.id));
 
     toolbar.appendChild(editBtn);
     toolbar.appendChild(deleteBtn);
+    toolbar.appendChild(upBtn);
+    toolbar.appendChild(downBtn);
 
     wrapper.appendChild(toolbar);
     wrapper.appendChild(contentContainer);
 
-    return { editBtn, deleteBtn, contentContainer, wrapper }
+    return { editBtn, deleteBtn, upBtn, downBtn, contentContainer, wrapper }
 }
 
 function openEditorForType(caption, fn, typeId) {
@@ -235,6 +248,28 @@ function editExercise(blockId) {
 
 function deleteExercise(blockId) {
     exerciseBlocks = exerciseBlocks.filter(block => block.id !== blockId);
+    renderExerciseBlocks();
+}
+
+function moveUp(blockId) {
+    const index = exerciseBlocks.findIndex(block => block && block.id === blockId);
+    if (index <= 0) return;
+
+    const temp = exerciseBlocks[index - 1];
+    exerciseBlocks[index - 1] = exerciseBlocks[index];
+    exerciseBlocks[index] = temp;
+
+    renderExerciseBlocks();
+}
+
+function moveDown(blockId) {
+    const index = exerciseBlocks.findIndex(block => block && block.id === blockId);
+    if (index === -1 || index >= exerciseBlocks.length - 1) return;
+    
+    const temp = exerciseBlocks[index + 1];
+    exerciseBlocks[index + 1] = exerciseBlocks[index];
+    exerciseBlocks[index] = temp;
+    
     renderExerciseBlocks();
 }
 
