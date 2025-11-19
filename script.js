@@ -103,8 +103,14 @@ function renderExerciseBlocks() {
                 generatedSenContainer.appendChild(headingPar);
             }
 
-            const scrambledSenText = document.createElement("p");
-            scrambledSenText.textContent = block.data.text;
+            const scrambledSenText = document.createElement("ul");
+            const scrambledSource = block.data.scrambledLines;
+            scrambledSource.forEach((sen) => {
+                generatedSen = document.createElement("li");
+                generatedSen.textContent = sen;
+                scrambledSenText.appendChild(generatedSen);
+            } )
+
             generatedSenContainer.appendChild(scrambledSenText);
 
             blockElement = generatedSenContainer;
@@ -186,7 +192,8 @@ function saveEdit() {
             if (block.type === "scrambled-sentence") {
                 block.data = {
                     heading: headingValue,
-                    text: bodyValue
+                    text: bodyValue,
+                    scrambledLines: makeScrambledLines(bodyValue)
                 };
             } else {
                 block.data.text = bodyValue;
@@ -202,7 +209,8 @@ function saveEdit() {
         if (currentEditingType === "scrambled-sentence") {
             data = {
                 heading: headingValue,
-                text: bodyValue
+                text: bodyValue,
+                scrambledLines: makeScrambledLines(bodyValue)
             };
         } else {
             data = {
@@ -304,6 +312,23 @@ function createScrambledSentences(data = { heading: "", text: "" }) {
     <textarea class="text-box">${data.text || ""}</textarea>
     `
 }
+
+
+let text = "What's up you mad idiots!\nAnybody here like to party?"
+function makeScrambledLines(text) {
+    const originalSentences = text.split("\n");
+    const sentencesSplitByWord = originalSentences.map(sen => sen.split(" "));
+    sentencesSplitByWord.forEach((sen) => {
+        for (let i = sen.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [sen[i], sen[j]] = [sen[j], sen[i]]
+    }});
+    const scrambledLines = sentencesSplitByWord.map(sen => sen.join(" / "));
+
+    return scrambledLines;
+}
+
+// event listeners for hard-coded buttons
 
 addExerciseBtn.addEventListener("click", () => showMenu(createExerciseMenu));
 closeExerciseMenuBtn.addEventListener("click", () => closeMenu(createExerciseMenu));

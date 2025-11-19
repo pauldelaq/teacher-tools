@@ -124,3 +124,7 @@ header h1 {
     height: 4em;
     font-size: 24px;
 }
+
+ul {
+    list-style-type: none;
+}
