@@ -12,10 +12,16 @@ body {
     margin: 0;
     padding-left: 1em;
     padding-right: 1em;
+    font-size: 16px;
+}
+
+.header-tools {
+    position: fixed;
+    right: 6px;
 }
 
 .add-button {
-  font-size: 96px;
+  font-size: 32px;
   width: 1.5em;
   height: 1.5em;
 }
@@ -88,8 +94,9 @@ header h1 {
 }
 
 .exercise-block {
+    position: relative;
     background-color: white;
-    padding: 1em;
+    padding: 0.5em;
 }
 
 .exercise-block:hover {
@@ -97,12 +104,23 @@ header h1 {
     border-radius: 10px;
 }
 
+.exercise-block:hover .block-toolbar {
+    opacity: 1;
+    pointer-events: auto;
+}
+
 .block-content {
     width: 100%;
 }
 
 .block-toolbar {
-    color: red;
+    position: absolute;
+    display: flex;
+    top: 0.5em;
+    right: 0.5em;
+    gap: 0.25em;
+    opacity: 0;
+    pointer-events: none;
 }
 
 .toolbar-btns {
@@ -127,4 +145,16 @@ header h1 {
 
 ul {
     list-style-type: none;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.worksheet-page {
+  max-width: 800px;
+  width: 100%;
+  margin: 1.5rem auto;
+  padding: 1.5rem;
+  background: white;
 }

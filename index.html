@@ -6,10 +6,13 @@
         <title>Worksheet Maker</title>
         <link rel="stylesheet" href="styles.css">
     </head>
-    <header>
-        <h1>Worksheet Master</h1>
-    </header>
     <body>
+        <header>
+            <h1>Worksheet Master</h1>
+            <div class="header-tools">
+                <button id="add-button" class="add-button">+</button>
+            </div>
+        </header>
         <div id="create-exercise-menu" class="menu-overlay hidden">
             <h1>What kind of exercise do you want to create?</h1>
             <button id="close-exercise-menu" class="menu-buttons">X</button>
@@ -24,11 +27,12 @@
             <button id="close-editing-interface" class="menu-buttons">Close</button>
             <div id="editing-tools-display" class="editing-tools-display"></div>
         </div>
-        <main>
-            <h1 id="add-first-exercise-text" class="hidden">Please press the "+" button to add a title or exercise.</h1>
-            <div id="worksheet"></div>
-            <button id="add-button" class="add-button">+</button>
-        </main>
+        <div id="worksheet-page" class="worksheet-page">
+            <main>
+                <h1 id="add-first-exercise-text" class="hidden">Please press the "+" button to add a title or exercise.</h1>
+                <div id="worksheet"></div>
+            </main>
+        </div>
         <script src="script.js"></script>
     </body>
 </html>

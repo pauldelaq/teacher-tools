@@ -18,6 +18,14 @@ let exerciseBlocks = [
     id: 1,
     type: "title",
     data: { text: "My Worksheet" }
+  },
+  {
+    id: 2,
+    type: "scrambled-sentence",
+    data: { heading: "Unscramble the sentences.", scrambledLines: [
+    "The / runs / quickly. / cat",
+    "eats / breakfast. / dog / for / chicken / The"
+], text: "The cat runs quickly.\nThe dog eats chicken for breakfast." }
   }
 ];
 const exerciseTypes = [
@@ -100,6 +108,7 @@ function renderExerciseBlocks() {
             if (block.data.heading) {
                 const headingPar = document.createElement("p");
                 headingPar.textContent = block.data.heading;
+                headingPar.classList.add("bold");
                 generatedSenContainer.appendChild(headingPar);
             }
 
@@ -287,7 +296,7 @@ function moveDown(blockId) {
     renderExerciseBlocks();
 }
 
-// functions for individual exercises
+// functions to build UI for individual exercises
 
 function createTitleText(initialText = "") {
     headingContainer.innerHTML = "";
