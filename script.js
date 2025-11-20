@@ -22,10 +22,13 @@ let exerciseBlocks = [
   {
     id: 2,
     type: "scrambled-sentence",
-    data: { heading: "Unscramble the sentences.", scrambledLines: [
+    data: { heading: "Unscramble the sentences.", scrambledLines:
+    [
     "The / runs / quickly. / cat",
     "eats / breakfast. / dog / for / chicken / The"
-], text: "The cat runs quickly.\nThe dog eats chicken for breakfast." }
+    ],
+    text: "The cat runs quickly.\nThe dog eats chicken for breakfast.",
+    numbered: true, showAnswerLines: true }
   }
 ];
 const exerciseTypes = [
@@ -59,6 +62,7 @@ function closeMenu(el) {
     el.classList.add("hidden");
 }
 
+// Function to render the buttons for the exercise types when creating a new exercise 
 function renderExerciseTypes() {
     exerciseTypes.forEach((el) => {
         const exerciseButtonWrapper = document.createElement("div");
@@ -112,12 +116,18 @@ function renderExerciseBlocks() {
                 generatedSenContainer.appendChild(headingPar);
             }
 
-            const scrambledSenText = document.createElement("ul");
+            const scrambledSenText = document.createElement(block.data.numbered ? "ol" : "ul");
             const scrambledSource = block.data.scrambledLines;
             scrambledSource.forEach((sen) => {
                 generatedSen = document.createElement("li");
                 generatedSen.textContent = sen;
                 scrambledSenText.appendChild(generatedSen);
+                if (block.data.showAnswerLines) {
+                    const answerLine = document.createElement("div");
+                    answerLine.textContent = "________________________________________________________________";
+                    answerLine.classList.add("answer-line");
+                    generatedSen.appendChild(answerLine);
+                }
             } )
 
             generatedSenContainer.appendChild(scrambledSenText);
@@ -184,6 +194,7 @@ function openEditorForType(caption, fn, typeId) {
     showMenu(editingInterface);
     exerciseType.textContent = `Create ${caption}`;
     fn();
+    hideToolbarButtons();
 }
 
 function saveEdit() {
@@ -195,6 +206,12 @@ function saveEdit() {
     const bodyValue = bodyTextarea.value;
     const headingValue = headingTextarea ? headingTextarea.value : "";
 
+    const numberedElement = editorBody.querySelector("#numberedCheckbox");
+    const answerLinesElement = editorBody.querySelector("#answerLinesCheckbox");
+
+    const numberedValue = numberedElement ? numberedElement.checked : true;
+    const answerLinesValue = answerLinesElement ? answerLinesElement.checked : true;
+
     if (currentEditingBlockId !== null) {
         const block = exerciseBlocks.find(b => b.id === currentEditingBlockId);
         if (block) {
@@ -202,7 +219,9 @@ function saveEdit() {
                 block.data = {
                     heading: headingValue,
                     text: bodyValue,
-                    scrambledLines: makeScrambledLines(bodyValue)
+                    scrambledLines: makeScrambledLines(bodyValue),
+                    numbered: numberedValue,
+                    showAnswerLines: answerLinesValue
                 };
             } else {
                 block.data.text = bodyValue;
@@ -219,7 +238,9 @@ function saveEdit() {
             data = {
                 heading: headingValue,
                 text: bodyValue,
-                scrambledLines: makeScrambledLines(bodyValue)
+                scrambledLines: makeScrambledLines(bodyValue),
+                numbered: numberedValue,
+                showAnswerLines: answerLinesValue
             };
         } else {
             data = {
@@ -296,6 +317,16 @@ function moveDown(blockId) {
     renderExerciseBlocks();
 }
 
+function hideToolbarButtons() {
+    addExerciseBtn.classList.add("hidden");
+    closeExerciseMenuBtn.classList.add("hidden");
+}
+
+function setToolbarButtons() {
+    addExerciseBtn.classList.remove("hidden");
+    closeExerciseMenuBtn.classList.add("hidden");
+}
+
 // functions to build UI for individual exercises
 
 function createTitleText(initialText = "") {
@@ -312,18 +343,24 @@ function createInstructionText(initialText = "") {
 
 function createScrambledSentences(data = { heading: "", text: "" }) {
     headingContainer.innerHTML = `
-        <label for="scramble-heading">Instruction (Optional):</label>
+        <label for="scramble-heading" class="label-top">Instruction (Optional):</label>
         <textarea id="scramble-heading" class="heading-input" placeholder="Unscramble the following sentences.">${data.heading || ""}</textarea> 
     `;
 
     exerciseDescription.textContent = "Please type the sentences you wish to use in the text area.";
+
+    const numberedChecked = data.numbered ? "checked" : "";
+    const answerChecked = data.showAnswerLines ? "checked" : "";
+
     editorBody.innerHTML = `
-    <textarea class="text-box">${data.text || ""}</textarea>
-    `
+        <textarea class="text-box">${data.text || ""}</textarea>
+        <div class="checkboxGroup">
+            <label for="numberedCheckbox">Number answers: </label><input type="checkbox" id="numberedCheckbox" ${numberedChecked}>
+            <label for="answerLinesCheckbox">Add answer lines: </label><input type="checkbox" id="answerLinesCheckbox" ${answerChecked}>
+        </div>
+    `;
 }
 
-
-let text = "What's up you mad idiots!\nAnybody here like to party?"
 function makeScrambledLines(text) {
     const originalSentences = text.split("\n");
     const sentencesSplitByWord = originalSentences.map(sen => sen.split(" "));
@@ -339,9 +376,20 @@ function makeScrambledLines(text) {
 
 // event listeners for hard-coded buttons
 
-addExerciseBtn.addEventListener("click", () => showMenu(createExerciseMenu));
-closeExerciseMenuBtn.addEventListener("click", () => closeMenu(createExerciseMenu));
-closeEditingInterface.addEventListener("click", () => closeMenu(editingInterface));
+addExerciseBtn.addEventListener("click", () => {
+    showMenu(createExerciseMenu);
+    addExerciseBtn.classList.toggle("hidden");
+    closeExerciseMenuBtn.classList.toggle("hidden");
+});
+closeExerciseMenuBtn.addEventListener("click", () => {
+    closeMenu(createExerciseMenu);
+    addExerciseBtn.classList.toggle("hidden");
+    closeExerciseMenuBtn.classList.toggle("hidden");
+});
+closeEditingInterface.addEventListener("click", () => {
+    closeMenu(editingInterface);
+    setToolbarButtons();
+});
 saveEditBtn.addEventListener("click", () => saveEdit());
 
 // Stuff to happen upon page load
