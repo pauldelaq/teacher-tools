@@ -10,9 +10,11 @@ const editingInterface = document.getElementById("editing-interface");
 const closeEditingInterface = document.getElementById("close-editing-interface");
 const saveEditBtn = document.getElementById("save-edit");
 const editorBody = document.getElementById("editor-body");
+const modeBtn = document.getElementById("mode-button");
 const worksheet = document.getElementById("worksheet");
 let currentEditingBlockId = null;
 let currentEditingType = null;
+let currentViewMode = "student";
 let exerciseBlocks = [
  {
     id: 1,
@@ -29,6 +31,11 @@ let exerciseBlocks = [
     ],
     text: "The cat runs quickly.\nThe dog eats chicken for breakfast.",
     numbered: true, showAnswerLines: true }
+  },
+  {
+    id: 3,
+    type: "instruction",
+    data: { text: "Note: Don't forget to finish your worksheet."}
   }
 ];
 const exerciseTypes = [
@@ -82,6 +89,7 @@ function renderExerciseTypes() {
     )
 }
 
+// Logic for rendering the actual exercises
 function renderExerciseBlocks() {
     worksheet.innerHTML = "";
     if (exerciseBlocks.length === 0) {
@@ -103,6 +111,7 @@ function renderExerciseBlocks() {
         if (block.type === "instruction") {
             const generatedPar = document.createElement("p");
             generatedPar.textContent = block.data.text;
+            generatedPar.classList.add("bold");
             blockElement = generatedPar;
         }
 
@@ -117,18 +126,28 @@ function renderExerciseBlocks() {
             }
 
             const scrambledSenText = document.createElement(block.data.numbered ? "ol" : "ul");
-            const scrambledSource = block.data.scrambledLines;
-            scrambledSource.forEach((sen) => {
+            if (currentViewMode === "student") {
+                const scrambledSource = block.data.scrambledLines;
+                scrambledSource.forEach((sen) => {
                 generatedSen = document.createElement("li");
                 generatedSen.textContent = sen;
                 scrambledSenText.appendChild(generatedSen);
                 if (block.data.showAnswerLines) {
                     const answerLine = document.createElement("div");
-                    answerLine.textContent = "________________________________________________________________";
+                    answerLine.innerHTML = "<br>________________________________________________________________";
                     answerLine.classList.add("answer-line");
                     generatedSen.appendChild(answerLine);
                 }
             } )
+            } else {
+                const originalText = block.data.text;
+                const sentencesArray = originalText.split("\n");
+                sentencesArray.forEach((sen) => {
+                generatedSen = document.createElement("li");
+                generatedSen.textContent = sen;
+                scrambledSenText.appendChild(generatedSen);
+                })
+            }
 
             generatedSenContainer.appendChild(scrambledSenText);
 
@@ -325,6 +344,19 @@ function hideToolbarButtons() {
 function setToolbarButtons() {
     addExerciseBtn.classList.remove("hidden");
     closeExerciseMenuBtn.classList.add("hidden");
+    modeBtn.classList.remove("hidden");
+}
+
+function handleModeChange() {
+    if (currentViewMode === "student") {
+        currentViewMode = "teacher";
+        modeBtn.innerHTML = `<img src="assets/teacher.svg">`;
+    } else {
+        currentViewMode = "student";
+        modeBtn.innerHTML = `<img src="assets/student.svg">`;
+    }
+
+    renderExerciseBlocks();
 }
 
 // functions to build UI for individual exercises
@@ -380,17 +412,21 @@ addExerciseBtn.addEventListener("click", () => {
     showMenu(createExerciseMenu);
     addExerciseBtn.classList.toggle("hidden");
     closeExerciseMenuBtn.classList.toggle("hidden");
+    modeBtn.classList.toggle("hidden");
 });
 closeExerciseMenuBtn.addEventListener("click", () => {
     closeMenu(createExerciseMenu);
     addExerciseBtn.classList.toggle("hidden");
     closeExerciseMenuBtn.classList.toggle("hidden");
+    modeBtn.classList.toggle("hidden");
 });
 closeEditingInterface.addEventListener("click", () => {
     closeMenu(editingInterface);
     setToolbarButtons();
 });
 saveEditBtn.addEventListener("click", () => saveEdit());
+
+modeBtn.addEventListener("click", () => handleModeChange());
 
 // Stuff to happen upon page load
 

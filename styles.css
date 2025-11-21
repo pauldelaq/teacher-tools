@@ -16,14 +16,32 @@ body {
 }
 
 .header-tools {
-    position: fixed;
-    right: 6px;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  position: absolute; /* instead of fixed */
+  right: 1em;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .top-menu-button {
-  font-size: 32px;
-  width: 1.5em;
-  height: 1.5em;
+display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 48px;
+    width: 48px;
+    padding: 0;
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 48px;
+}
+
+.top-menu-button img {
+  object-fit: contain;
+  pointer-events: none;
 }
 
 .menu-overlay {
@@ -166,8 +184,6 @@ ul {
 .answer-line {
     color: black;
     font-weight: bold;
-    padding-top: 1em;
-    padding-bottom: 1em;
 }
 
 label {
