@@ -36,6 +36,11 @@ let exerciseBlocks = [
     id: 3,
     type: "instruction",
     data: { text: "Note: Don't forget to finish your worksheet."}
+  },
+    {
+    id: 4,
+    type: "blanks-passage",
+    data: { heading: "Please fill in the blanks with appropriate words.", text: "Cats are [cute] animals that like to eat [fish]. Garfield is a famous [cat] that likes to eat [lasagna].", wordList: ["fish", "lasagna", "cat", "cute"], showWordList: true }
   }
 ];
 const exerciseTypes = [
@@ -56,7 +61,14 @@ const exerciseTypes = [
         buttonContent: "cat / The / quickly. / runs",
         buttonCaption: "Scrambled Sentences",
         buttonFunction: createScrambledSentences
+    },
+        {
+        id: "blanks-passage",
+        buttonContent: "Cats are _______ animals that like to eat _______.",
+        buttonCaption: "Fill in the Blanks Passage",
+        buttonFunction: createBlanksPassage
     }
+
 ]
 
 // general functions
@@ -154,6 +166,51 @@ function renderExerciseBlocks() {
             blockElement = generatedSenContainer;
         }
 
+        if (block.type === "blanks-passage") {
+            const generatedPassageContainer = document.createElement("div");
+
+            if (block.data.heading) {
+                const headingPar = document.createElement("p");
+                headingPar.textContent = block.data.heading;
+                headingPar.classList.add("bold");
+                generatedPassageContainer.appendChild(headingPar);
+            }
+
+            if (block.data.showWordList) {
+                const generatedWordList = document.createElement("div");
+                generatedWordList.classList.add("word-bank");
+
+                // fall back gracefully if wordList is missing (old data)
+                const words = block.data.wordList && block.data.wordList.length
+                    ? block.data.wordList
+                    : makeWordListFromPassage(block.data.text);
+
+                words.forEach((el) => {
+                    const wordBankItem = document.createElement("div");
+                    wordBankItem.classList.add("word-bank-item");
+                    wordBankItem.textContent = el;
+                    generatedWordList.appendChild(wordBankItem);
+                });
+
+                generatedPassageContainer.appendChild(generatedWordList);
+            }
+            
+            const passage = document.createElement("p");
+            if (currentViewMode === "student") {
+                const passageSource = block.data.text;
+                const passageWithBlanks = passageSource.replace(/\[.*?\]/g, "________");
+                passage.textContent = passageWithBlanks;
+                generatedPassageContainer.appendChild(passage);
+            } else {
+                const passageSource = block.data.text;
+                const passageWithUnderlinedWords = passageSource.replaceAll("[", `<span class="underlined">`).replaceAll("]", `</span>`);
+                passage.innerHTML = passageWithUnderlinedWords;
+                generatedPassageContainer.appendChild(passage);
+            }
+
+            blockElement = generatedPassageContainer;
+        }
+
         if (blockElement) {
             contentContainer.appendChild(blockElement);
             worksheet.appendChild(wrapper);
@@ -231,6 +288,10 @@ function saveEdit() {
     const numberedValue = numberedElement ? numberedElement.checked : true;
     const answerLinesValue = answerLinesElement ? answerLinesElement.checked : true;
 
+    const showWordListElement = editorBody.querySelector("#showWordListCheckbox");
+    const showWordListValue = showWordListElement ? showWordListElement.checked : true;
+
+    // save when editing existing block
     if (currentEditingBlockId !== null) {
         const block = exerciseBlocks.find(b => b.id === currentEditingBlockId);
         if (block) {
@@ -242,12 +303,20 @@ function saveEdit() {
                     numbered: numberedValue,
                     showAnswerLines: answerLinesValue
                 };
+            } else if (block.type === "blanks-passage") {
+                block.data = {
+                    heading: headingValue,
+                    text: bodyValue,
+                    showWordList: showWordListValue,
+                    wordList: makeWordListFromPassage(bodyValue)
+                    };
             } else {
                 block.data.text = bodyValue;
             }
         }
     }
 
+    // save when creating new
     if (currentEditingBlockId === null && currentEditingType) {
         const newId = exerciseBlocks.length ? Math.max(...exerciseBlocks.map(b => b.id)) + 1 : 1;
 
@@ -261,6 +330,13 @@ function saveEdit() {
                 numbered: numberedValue,
                 showAnswerLines: answerLinesValue
             };
+        } else if (currentEditingType === "blanks-passage") {
+            data = {
+                heading: headingValue,
+                text: bodyValue,
+                showWordList: showWordListValue,
+                wordList: makeWordListFromPassage(bodyValue)
+                };
         } else {
             data = {
                 text: bodyValue
@@ -302,11 +378,13 @@ function editExercise(blockId) {
 
     // call the type's editor-builder function with existing data
     // for simple text-based types (title, instruction) we pass block.data.text
-    if (block.type === "scrambled-sentence") {
+    if (block.type === "scrambled-sentence" || block.type === "blanks-passage") {
         typeConfig.buttonFunction(block.data || {});
     } else {
         typeConfig.buttonFunction(block.data && block.data.text ? block.data.text : "");
     }
+
+    hideToolbarButtons();
 }
 
 function deleteExercise(blockId) {
@@ -339,6 +417,7 @@ function moveDown(blockId) {
 function hideToolbarButtons() {
     addExerciseBtn.classList.add("hidden");
     closeExerciseMenuBtn.classList.add("hidden");
+    modeBtn.classList.add("hidden");
 }
 
 function setToolbarButtons() {
@@ -404,6 +483,39 @@ function makeScrambledLines(text) {
     const scrambledLines = sentencesSplitByWord.map(sen => sen.join(" / "));
 
     return scrambledLines;
+}
+
+function createBlanksPassage(data = { heading: "", text: "" }) {
+    headingContainer.innerHTML = `
+        <label for="scramble-heading" class="label-top">Instruction (Optional):</label>
+        <textarea id="scramble-heading" class="heading-input" placeholder="Please fill in the blanks with appropriate words.">${data.heading || ""}</textarea> 
+    `;
+
+    exerciseDescription.textContent = "Please type your passage in the text area. Include [square brackets] around the words you'd like to remove.";
+
+    const showWordListChecked = data.showWordList ? "checked" : "";
+
+    editorBody.innerHTML = `
+        <textarea class="text-box">${data.text || ""}</textarea>
+        <div class="checkboxGroup">
+            <label for="answerLinesCheckbox">Show word bank: </label><input type="checkbox" id="showWordListCheckbox" ${showWordListChecked}>
+        </div>
+    `;
+}
+
+function makeWordListFromPassage(text) {
+    const matches = text.match(/\[(.*?)\]/g);
+    if (!matches) return [];
+
+    const rawWords = matches.map(m => m.replace(/\[|\]/g, ""));
+
+    const shuffled = [...rawWords];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    return shuffled;
 }
 
 // event listeners for hard-coded buttons

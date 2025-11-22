@@ -194,3 +194,20 @@ label {
     padding-bottom: 1em;
     font-weight: bold;
 }
+
+.word-bank {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5em;
+  margin-bottom: 1em;
+  font-weight: bold;
+}
+
+.word-bank-item {
+  text-align: center;
+}
+
+.underlined {
+    text-decoration: underline;
+    font-weight: bold;
+}
