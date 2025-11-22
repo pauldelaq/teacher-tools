@@ -19,7 +19,7 @@ let exerciseBlocks = [
  {
     id: 1,
     type: "title",
-    data: { text: "My Worksheet" }
+    data: { text: "My Worksheet", showLetter: true }
   },
   {
     id: 2,
@@ -30,23 +30,23 @@ let exerciseBlocks = [
     "eats / breakfast. / dog / for / chicken / The"
     ],
     text: "The cat runs quickly.\nThe dog eats chicken for breakfast.",
-    numbered: true, showAnswerLines: true }
+    numbered: true, showAnswerLines: true, showLetter: true }
   },
   {
     id: 3,
     type: "instruction",
-    data: { text: "Note: Don't forget to finish your worksheet."}
+    data: { text: "Note: Don't forget to finish your worksheet.", showLetter: true }
   },
     {
     id: 4,
     type: "blanks-passage",
-    data: { heading: "Please fill in the blanks with appropriate words.", text: "Cats are [cute] animals that like to eat [fish]. Garfield is a famous [cat] that likes to eat [lasagna].", wordList: ["fish", "lasagna", "cat", "cute"], showWordList: true }
+    data: { heading: "Please fill in the blanks with appropriate words.", text: "Cats are [cute] animals that like to eat [fish]. Garfield is a famous [cat] that likes to eat [lasagna].", wordList: ["fish", "lasagna", "cat", "cute"], showWordList: true, showLetter: true }
   }
 ];
 const exerciseTypes = [
     {
         id: "title",
-        buttonContent: "Chemistry 101 with Professor White",
+        buttonContent: "Chemistry 101 with Professor White - Midterm Review",
         buttonCaption: "Title",
         buttonFunction: createTitleText
     },
@@ -64,7 +64,7 @@ const exerciseTypes = [
     },
         {
         id: "blanks-passage",
-        buttonContent: "Cats are _______ animals that like to eat _______.",
+        buttonContent: "fish\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0cute<br><br>Cats are _______ animals that like to eat _______.",
         buttonCaption: "Fill in the Blanks Passage",
         buttonFunction: createBlanksPassage
     }
@@ -90,7 +90,7 @@ function renderExerciseTypes() {
         exerciseButtonCaption.textContent = el.buttonCaption;
         exerciseButtonCaption.classList.add("exercise-button-caption");
         const exerciseTypeButton = document.createElement("button");
-        exerciseTypeButton.innerText = el.buttonContent;
+        exerciseTypeButton.innerHTML = el.buttonContent;
         exerciseTypeButton.classList.add("exercise-type-button");
         exerciseTypeButton.id = el.id;
         exerciseTypeButton.addEventListener("click", () => openEditorForType(el.buttonCaption, el.buttonFunction, el.id));
@@ -104,25 +104,36 @@ function renderExerciseTypes() {
 // Logic for rendering the actual exercises
 function renderExerciseBlocks() {
     worksheet.innerHTML = "";
+
+    let letterIndex = 0;
+
     if (exerciseBlocks.length === 0) {
         addFirstExerciseText.classList.remove("hidden");
     } else {
         addFirstExerciseText.classList.add("hidden");
     }
     exerciseBlocks.forEach(block => {
-        const { editBtn, deleteBtn, upBtn, downBtn, contentContainer, wrapper } = createBlockWrapper(block);
+        const { editBtn, deleteBtn, upBtn, downBtn, letterBtn, contentContainer, wrapper } = createBlockWrapper(block);
 
         let blockElement;
 
+        let letter = null;
+        if (block.data && block.data.showLetter) {
+            letter = String.fromCharCode(65 + letterIndex);
+            letterIndex++;
+        }
+
         if (block.type === "title") {
             const generatedTitle = document.createElement("h1");
-            generatedTitle.textContent = block.data.text;
+            const baseText = block.data.text || "";
+            generatedTitle.textContent = letter ? `${letter}. ${baseText}` : baseText;
             blockElement = generatedTitle;
         }
 
         if (block.type === "instruction") {
             const generatedPar = document.createElement("p");
-            generatedPar.textContent = block.data.text;
+            const baseText = block.data.text || "";
+            generatedPar.textContent = letter ? `${letter}. ${baseText}` : baseText;
             generatedPar.classList.add("bold");
             blockElement = generatedPar;
         }
@@ -130,35 +141,43 @@ function renderExerciseBlocks() {
         if (block.type === "scrambled-sentence") {
             const generatedSenContainer = document.createElement("div");
 
+            let hasHeading = false;
             if (block.data.heading) {
+                hasHeading = true;
                 const headingPar = document.createElement("p");
-                headingPar.textContent = block.data.heading;
+                const baseHeading = block.data.heading || "";
+                headingPar.textContent = letter ? `${letter}. ${baseHeading}` : baseHeading;
                 headingPar.classList.add("bold");
                 generatedSenContainer.appendChild(headingPar);
+            } else if (letter) {
+                const letterLine = document.createElement("p");
+                letterLine.textContent = `${letter}.`;
+                letterLine.classList.add("bold");
+                generatedSenContainer.appendChild(letterLine);
             }
 
             const scrambledSenText = document.createElement(block.data.numbered ? "ol" : "ul");
             if (currentViewMode === "student") {
                 const scrambledSource = block.data.scrambledLines;
                 scrambledSource.forEach((sen) => {
-                generatedSen = document.createElement("li");
-                generatedSen.textContent = sen;
-                scrambledSenText.appendChild(generatedSen);
-                if (block.data.showAnswerLines) {
-                    const answerLine = document.createElement("div");
-                    answerLine.innerHTML = "<br>________________________________________________________________";
-                    answerLine.classList.add("answer-line");
-                    generatedSen.appendChild(answerLine);
-                }
-            } )
+                    generatedSen = document.createElement("li");
+                    generatedSen.textContent = sen;
+                    scrambledSenText.appendChild(generatedSen);
+                    if (block.data.showAnswerLines) {
+                        const answerLine = document.createElement("div");
+                        answerLine.innerHTML = "<br>________________________________________________________________";
+                        answerLine.classList.add("answer-line");
+                        generatedSen.appendChild(answerLine);
+                    }
+                });
             } else {
                 const originalText = block.data.text;
                 const sentencesArray = originalText.split("\n");
                 sentencesArray.forEach((sen) => {
-                generatedSen = document.createElement("li");
-                generatedSen.textContent = sen;
-                scrambledSenText.appendChild(generatedSen);
-                })
+                    generatedSen = document.createElement("li");
+                    generatedSen.textContent = sen;
+                    scrambledSenText.appendChild(generatedSen);
+                });
             }
 
             generatedSenContainer.appendChild(scrambledSenText);
@@ -169,11 +188,19 @@ function renderExerciseBlocks() {
         if (block.type === "blanks-passage") {
             const generatedPassageContainer = document.createElement("div");
 
+            let hasHeading = false;
             if (block.data.heading) {
+                hasHeading = true;
                 const headingPar = document.createElement("p");
-                headingPar.textContent = block.data.heading;
+                const baseHeading = block.data.heading || "";
+                headingPar.textContent = letter ? `${letter}. ${baseHeading}` : baseHeading;
                 headingPar.classList.add("bold");
                 generatedPassageContainer.appendChild(headingPar);
+            } else if (letter) {
+                const letterLine = document.createElement("p");
+                letterLine.textContent = `${letter}.`;
+                letterLine.classList.add("bold");
+                generatedPassageContainer.appendChild(letterLine);
             }
 
             if (block.data.showWordList) {
@@ -185,11 +212,16 @@ function renderExerciseBlocks() {
                     ? block.data.wordList
                     : makeWordListFromPassage(block.data.text);
 
-                words.forEach((el) => {
-                    const wordBankItem = document.createElement("div");
+                words.forEach((el, index) => {
+                    const wordBankItem = document.createElement("span");
                     wordBankItem.classList.add("word-bank-item");
                     wordBankItem.textContent = el;
                     generatedWordList.appendChild(wordBankItem);
+
+                    // add spaces after each word except the last
+                    if (index < words.length - 1) {
+                        generatedWordList.appendChild(document.createTextNode("\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0"));
+                    }
                 });
 
                 generatedPassageContainer.appendChild(generatedWordList);
@@ -245,21 +277,27 @@ function createBlockWrapper(block) {
     downBtn.innerHTML = `<img src="assets/down.svg">`;
     downBtn.classList.add("toolbar-btns");
 
+    const letterBtn = document.createElement("button");
+    const letterIcon = block.data.showLetter ? "assets/abc-color.svg" : "assets/abc.svg";
+    letterBtn.innerHTML = `<img src="${letterIcon}">`;
+    letterBtn.classList.add("toolbar-btns");
 
     editBtn.addEventListener("click", () => editExercise(block.id));
     deleteBtn.addEventListener("click", () => deleteExercise(block.id));
     upBtn.addEventListener("click", () => moveUp(block.id));
     downBtn.addEventListener("click", () => moveDown(block.id));
+    letterBtn.addEventListener("click", () => toggleLettering(block.id));
 
     toolbar.appendChild(editBtn);
     toolbar.appendChild(deleteBtn);
     toolbar.appendChild(upBtn);
     toolbar.appendChild(downBtn);
+    toolbar.appendChild(letterBtn);
 
     wrapper.appendChild(toolbar);
     wrapper.appendChild(contentContainer);
 
-    return { editBtn, deleteBtn, upBtn, downBtn, contentContainer, wrapper }
+    return { editBtn, deleteBtn, upBtn, downBtn, letterBtn, contentContainer, wrapper }
 }
 
 function openEditorForType(caption, fn, typeId) {
@@ -301,14 +339,16 @@ function saveEdit() {
                     text: bodyValue,
                     scrambledLines: makeScrambledLines(bodyValue),
                     numbered: numberedValue,
-                    showAnswerLines: answerLinesValue
+                    showAnswerLines: answerLinesValue,
+                    showLetter: block.data.showLetter
                 };
             } else if (block.type === "blanks-passage") {
                 block.data = {
                     heading: headingValue,
                     text: bodyValue,
                     showWordList: showWordListValue,
-                    wordList: makeWordListFromPassage(bodyValue)
+                    wordList: makeWordListFromPassage(bodyValue),
+                    showLetter: block.data.showLetter
                     };
             } else {
                 block.data.text = bodyValue;
@@ -328,18 +368,21 @@ function saveEdit() {
                 text: bodyValue,
                 scrambledLines: makeScrambledLines(bodyValue),
                 numbered: numberedValue,
-                showAnswerLines: answerLinesValue
+                showAnswerLines: answerLinesValue,
+                showLetter: true
             };
         } else if (currentEditingType === "blanks-passage") {
             data = {
                 heading: headingValue,
                 text: bodyValue,
                 showWordList: showWordListValue,
-                wordList: makeWordListFromPassage(bodyValue)
+                wordList: makeWordListFromPassage(bodyValue),
+                showLetter: true
                 };
         } else {
             data = {
-                text: bodyValue
+                text: bodyValue,
+                showLetter: true
             };
         }
 
@@ -410,6 +453,16 @@ function moveDown(blockId) {
     const temp = exerciseBlocks[index + 1];
     exerciseBlocks[index + 1] = exerciseBlocks[index];
     exerciseBlocks[index] = temp;
+
+    renderExerciseBlocks();
+}
+
+function toggleLettering(blockId) {
+    const index = exerciseBlocks.findIndex(block => block && block.id === blockId);
+    if (index === -1) return;
+
+    const block = exerciseBlocks[index];
+    block.data.showLetter = !block.data.showLetter;
 
     renderExerciseBlocks();
 }
