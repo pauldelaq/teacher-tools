@@ -19,7 +19,7 @@ let exerciseBlocks = [
  {
     id: 1,
     type: "title",
-    data: { text: "My Worksheet", showLetter: true }
+    data: { text: "My Worksheet", showLetter: false }
   },
   {
     id: 2,
@@ -63,12 +63,23 @@ const exerciseTypes = [
         buttonFunction: createScrambledSentences
     },
         {
+        id: "word-matching",
+        buttonContent: `<table class="matching-layout"><tr><td>apple</td><td> </td><td>orange</td></tr><tr><td>banana</td><td> </td><td>red</td></tr><tr><td>carrot</td><td> </td><td>yellow</td></tr></table>`,
+        buttonCaption: "Matching Words / Phrases",
+        buttonFunction: createWordMatching
+    },
+        {
         id: "blanks-passage",
         buttonContent: "fish\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0cute<br><br>Cats are _______ animals that like to eat _______.",
         buttonCaption: "Fill in the Blanks Passage",
         buttonFunction: createBlanksPassage
+    },
+        {
+        id: "cloze-test",
+        buttonContent: `Dogs typically <span class="bold">1. __________ </span> when they feel <span class="bold">2. __________</span>.<br><br><table class="cloze-test-choices"><tr><th>1. </th><td>a. bark</td><td>b. meow</td></tr><tr><th>2. </th><td>a. bored</td><td>b. excited</td></tr></table>`,
+        buttonCaption: "Cloze Test",
+        buttonFunction: createClozeTest
     }
-
 ]
 
 // general functions
@@ -127,6 +138,15 @@ function renderExerciseBlocks() {
             const generatedTitle = document.createElement("h1");
             const baseText = block.data.text || "";
             generatedTitle.textContent = letter ? `${letter}. ${baseText}` : baseText;
+            if (currentViewMode !== "student") {
+                const br = document.createElement("br");
+                const answerKeyIndicatorText = document.createElement("span");
+                answerKeyIndicatorText.textContent = "(Answer Key)";
+                answerKeyIndicatorText.classList.add("answer-label");
+
+                generatedTitle.appendChild(br);
+                generatedTitle.appendChild(answerKeyIndicatorText);
+            }
             blockElement = generatedTitle;
         }
 
@@ -245,6 +265,9 @@ function renderExerciseBlocks() {
 
         if (blockElement) {
             contentContainer.appendChild(blockElement);
+
+            const br = document.createElement("br");
+            contentContainer.appendChild(br);
             worksheet.appendChild(wrapper);
         }
     })
@@ -569,6 +592,14 @@ function makeWordListFromPassage(text) {
     }
 
     return shuffled;
+}
+
+function createClozeTest() {
+
+}
+
+function createWordMatching() {
+
 }
 
 // event listeners for hard-coded buttons
