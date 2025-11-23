@@ -240,3 +240,25 @@ label {
 .right {
     text-align: right;
 }
+
+.word-grid {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    border: 1px solid black;
+}
+
+.word-grid th, .word-grid td {
+    border: 1px solid black;
+}
+
+.essay-rows {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid black;
+}
+
+.essay-rows td {
+    border: 1px solid black;
+    height: 2em;
+}

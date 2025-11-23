@@ -11,6 +11,7 @@ const closeEditingInterface = document.getElementById("close-editing-interface")
 const saveEditBtn = document.getElementById("save-edit");
 const editorBody = document.getElementById("editor-body");
 const modeBtn = document.getElementById("mode-button");
+const copyBtn = document.getElementById("copy-button");
 const worksheet = document.getElementById("worksheet");
 let currentEditingBlockId = null;
 let currentEditingType = null;
@@ -58,9 +59,15 @@ const exerciseTypes = [
     },
     {
         id: "scrambled-sentence",
-        buttonContent: "cat / The / quickly. / runs",
+        buttonContent: "cat / The / quickly. / runs<br>barks / dog / loudly. / The",
         buttonCaption: "Scrambled Sentences",
         buttonFunction: createScrambledSentences
+    },
+        {
+        id: "scrambled-word",
+        buttonContent: `nosi<span class="underlined">d</span>ura<br>yek<span class="underlined">m</span>no`,
+        buttonCaption: "Scrambled Words",
+        buttonFunction: createScrambledWords
     },
         {
         id: "word-matching",
@@ -71,14 +78,32 @@ const exerciseTypes = [
         {
         id: "blanks-passage",
         buttonContent: "fish\u00A0\u00A0\u00A0\u00A0\u00A0\u00A0cute<br><br>Cats are _______ animals that like to eat _______.",
-        buttonCaption: "Fill in the Blanks Passage",
+        buttonCaption: "Fill-in-the-Blanks Passage",
         buttonFunction: createBlanksPassage
+    },
+        {
+        id: "multiple-choice-question",
+        buttonContent: `1. How many legs do cats typically have?<br><br><table class="cloze-test-choices"><tr><td>a. three</td><td>b. four</td></tr></table>`,
+        buttonCaption: "Multiple Choice Questions",
+        buttonFunction: createMultipleChoiceQuestions
     },
         {
         id: "cloze-test",
         buttonContent: `Dogs typically <span class="bold">1. __________ </span> when they feel <span class="bold">2. __________</span>.<br><br><table class="cloze-test-choices"><tr><th>1. </th><td>a. bark</td><td>b. meow</td></tr><tr><th>2. </th><td>a. bored</td><td>b. excited</td></tr></table>`,
         buttonCaption: "Cloze Test",
         buttonFunction: createClozeTest
+    },
+        {
+        id: "word-grid",
+        buttonContent: `<table class="word-grid"><tr><th>Verb</th><th>Past</th><th>p.p.</th></tr><tr><td>go</td><td> </td><td>gone</td></tr><tr><td> </td><td>saw</td><td>seen</td></tr><table>`,
+        buttonCaption: "Word Grid",
+        buttonFunction: createWordGrid
+    },
+    {
+        id: "essay-question",
+        buttonContent: `How do you feel about <span class="bold">cats</span>? Please write 150 words.<br><br><table class="essay-rows"><tr><td> </td></tr><tr><td> </td></tr><tr><td> </td></tr><tr><td> </td></tr></table>`,
+        buttonCaption: "Essay Question",
+        buttonFunction: createEssayQuestion
     }
 ]
 
@@ -494,12 +519,14 @@ function hideToolbarButtons() {
     addExerciseBtn.classList.add("hidden");
     closeExerciseMenuBtn.classList.add("hidden");
     modeBtn.classList.add("hidden");
+    copyBtn.classList.add("hidden");
 }
 
 function setToolbarButtons() {
     addExerciseBtn.classList.remove("hidden");
     closeExerciseMenuBtn.classList.add("hidden");
     modeBtn.classList.remove("hidden");
+    copyBtn.classList.remove("hidden");
 }
 
 function handleModeChange() {
@@ -602,6 +629,22 @@ function createWordMatching() {
 
 }
 
+function createWordGrid() {
+
+}
+
+function createScrambledWords() {
+
+}
+
+function createEssayQuestion() {
+
+}
+
+function createMultipleChoiceQuestions() {
+
+}
+
 // event listeners for hard-coded buttons
 
 addExerciseBtn.addEventListener("click", () => {
@@ -609,12 +652,40 @@ addExerciseBtn.addEventListener("click", () => {
     addExerciseBtn.classList.toggle("hidden");
     closeExerciseMenuBtn.classList.toggle("hidden");
     modeBtn.classList.toggle("hidden");
+    copyBtn.classList.toggle("hidden");
 });
+
+copyBtn.addEventListener("click", () => {
+    try {
+        const range = document.createRange();
+        range.selectNodeContents(worksheet);
+
+        const selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+
+        const successful = document.execCommand("copy");
+
+        // Clear the selection so it doesn’t stay highlighted
+        selection.removeAllRanges();
+
+        if (successful) {
+            alert("Copied to clipboard.");
+        } else {
+            alert("Copy may not have worked. You can still select the worksheet manually and copy.");
+        }
+    } catch (err) {
+        console.error("Copy failed:", err);
+        alert("Sorry, copying failed. You can still select the worksheet manually and copy.");
+    }
+});
+
 closeExerciseMenuBtn.addEventListener("click", () => {
     closeMenu(createExerciseMenu);
     addExerciseBtn.classList.toggle("hidden");
     closeExerciseMenuBtn.classList.toggle("hidden");
     modeBtn.classList.toggle("hidden");
+    copyBtn.classList.toggle("hidden");
 });
 closeEditingInterface.addEventListener("click", () => {
     closeMenu(editingInterface);
