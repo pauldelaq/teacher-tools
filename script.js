@@ -491,7 +491,10 @@ function saveEdit() {
     const showWordListElement = editorBody.querySelector("#showWordListCheckbox");
     const showWordListValue = showWordListElement ? showWordListElement.checked : true;
 
-
+    if (bodyValue === "") {
+        alert("Please type your exercise into the text box.");
+        return;
+    }
 
     // save when editing existing block
     if (currentEditingBlockId !== null) {
@@ -507,6 +510,11 @@ function saveEdit() {
                     showLetter: block.data.showLetter
                 };
             } else if (block.type === "blanks-passage") {
+                if (!bodyValue.match(/\[(.*?)\]/g)) {
+                    alert("Remember to include [square brackets] for the words you want to remove for the exercise.");
+                    return;
+                }
+
                 block.data = {
                     heading: headingValue,
                     text: bodyValue,
@@ -515,6 +523,9 @@ function saveEdit() {
                     showLetter: block.data.showLetter
                     };
             } else if (block.type === "multiple-choice-question") {
+                const isValid = validateMcqInput(bodyValue);
+                if (!isValid) return;
+
                 const questions = makeMcqQuestions(bodyValue);
 
                 questions.forEach((question) => {
@@ -567,7 +578,7 @@ function saveEdit() {
                 };
         } else if (currentEditingType === "multiple-choice-question") {
                 const questions = makeMcqQuestions(bodyValue);
-                
+
                 questions.forEach((question) => {
                     const correctAnswer = question.choices[question.correctIndex];
                     const shuffled = [...question.choices];
@@ -841,6 +852,50 @@ function makeMcqQuestions(text) {
 
     return questions;
 
+}
+
+function validateMcqInput(bodyValue) {
+    const lines = bodyValue.split("\n");
+
+    for (let i = 0; i < lines.length; i++) {
+        const trimmed = lines[i].trim();
+        if (!trimmed) continue; // skip completely blank lines
+
+        const matches = trimmed.match(/\[(.*?)\]/g);
+
+        // No square brackets
+        if (!matches) {
+            alert(`Don't forget to add [square/brackets/with/slashes] for your answer choices (problem on line ${i + 1}).`);
+            return false;
+        }
+
+        // Lines have too many []
+        if (matches.length > 1) {
+            alert(`Each line should just have one [answers] group. Please put each question + choices on its own line (problem on line ${i + 1}).`);
+            return false;
+        }
+
+        // Now we KNOW there is exactly one [ ... ] on this line
+        const match = matches[0];
+        const matchWithoutBrackets = match.replace("[", "").replace("]", "");
+        const choicesArray = matchWithoutBrackets.split("/").map(c => c.trim());
+
+        // 1) Duplicate choices?
+        const hasDuplicates = new Set(choicesArray).size !== choicesArray.length;
+        if (hasDuplicates) {
+            alert(`Please don't use the same answer more than once (problem on line ${i + 1}).`);
+            return false;
+        }
+
+        // 2) Too many choices? (more than 4 = more than 3 slashes)
+        const slashCount = (matchWithoutBrackets.match(/\//g) || []).length;
+        if (slashCount > 3) {
+            alert(`Line ${i + 1} has more than four answer choices. Please use a maximum of four choices per question.`);
+            return false;
+        }
+    }
+
+    return true;
 }
 
 // event listeners for hard-coded buttons
