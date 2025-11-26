@@ -42,8 +42,30 @@ let exerciseBlocks = [
     id: 4,
     type: "blanks-passage",
     data: { heading: "Please fill in the blanks with appropriate words.", text: "Cats are [cute] animals that like to eat [fish]. Garfield is a famous [cat] that likes to eat [lasagna].", wordList: ["fish", "lasagna", "cat", "cute"], showWordList: true, showLetter: true }
-  }
+  },
+    {
+    id: 5,
+    type: "multiple-choice-question",
+    data: {
+        heading: "Choose the correct answers.",
+        text: "How many legs do cats typically have? [four/three/two/one]\nWhat sound cats usually make? [meow/bark/moo]",
+        questions: [
+        {
+            prompt: "How many legs do cats typically have?",
+            choices: ["two", "four", "three", "one"],
+            correctIndex: 1
+        },
+        {
+            prompt: "What sound do cats usually make?",
+            choices: ["moo", "bark", "meow"],
+            correctIndex: 2
+        }
+        ],
+        showLetter: true, numbered: true
+    }
+    }
 ];
+
 const exerciseTypes = [
     {
         id: "title",
@@ -288,6 +310,98 @@ function renderExerciseBlocks() {
             blockElement = generatedPassageContainer;
         }
 
+        if (block.type === "multiple-choice-question") {
+            const generatedMCQsContainer = document.createElement("div");
+
+            let hasHeading = false;
+            if (block.data.heading) {
+                hasHeading = true;
+                const headingPar = document.createElement("p");
+                const baseHeading = block.data.heading || "";
+                headingPar.textContent = letter ? `${letter}. ${baseHeading}` : baseHeading;
+                headingPar.classList.add("bold");
+                generatedMCQsContainer.appendChild(headingPar);
+            } else if (letter) {
+                const letterLine = document.createElement("p");
+                letterLine.textContent = `${letter}.`;
+                letterLine.classList.add("bold");
+                generatedMCQsContainer.appendChild(letterLine);
+            }
+
+            const generatedMCQsText = document.createElement("div");
+            if (currentViewMode === "student") {
+                const questionsToRender = block.data.questions;
+                questionsToRender.forEach((question, index) => {
+                    const generatedQuestionItem = document.createElement("div");
+
+                    generatedQuestionItem.textContent = `___ ${index + 1}. ${question.prompt}`;
+
+                    generatedChoicesTable = document.createElement("table");
+                    generatedChoicesTable.classList.add("multiple-choice-options");
+
+                    const generatedChoiceRow = document.createElement("tr");
+                    
+                    question.choices.forEach((choice, index) => {
+                        const letterCell = document.createElement("td");
+                        letterCell.classList.add("letter-cell");
+                        const letter = String.fromCharCode(97 + index);
+
+                        letterCell.innerHTML = `${letter}.`;
+                        generatedChoiceRow.appendChild(letterCell);
+
+                        const generatedChoiceText = document.createElement("td");
+                        generatedChoiceText.classList.add("choice-cell");
+                        generatedChoiceText.textContent = `${choice}`
+
+                        generatedChoiceRow.appendChild(generatedChoiceText);
+                    });
+
+                    generatedChoicesTable.appendChild(generatedChoiceRow);
+                    generatedQuestionItem.appendChild(generatedChoicesTable);
+                    generatedMCQsText.appendChild(generatedQuestionItem);
+                    generatedMCQsContainer.appendChild(generatedMCQsText);
+                });
+
+            } else {
+                const questionsToRender = block.data.questions;
+                questionsToRender.forEach((question, index) => {
+                    const generatedQuestionItem = document.createElement("div");
+
+                    const correctIndex = Number(question.correctIndex);
+                    const abcd = String.fromCharCode(97 + correctIndex);
+                    generatedQuestionItem.innerHTML = `<span class="underlined">&nbsp;&nbsp;${abcd}&nbsp;&nbsp;</span> ${index + 1}. ${question.prompt}`;
+
+                    generatedChoicesTable = document.createElement("table");
+                    generatedChoicesTable.classList.add("multiple-choice-options");
+
+                    const generatedChoiceRow = document.createElement("tr");
+                    
+                    question.choices.forEach((choice, index) => {
+                        const letterCell = document.createElement("td");
+                        letterCell.classList.add("letter-cell");
+                        const letter = String.fromCharCode(97 + index);
+
+                        letterCell.innerHTML = `${letter}.`;
+                        generatedChoiceRow.appendChild(letterCell);
+
+                        const generatedChoiceText = document.createElement("td");
+                        generatedChoiceText.classList.add("choice-cell");
+                        generatedChoiceText.textContent = `${choice}`
+
+                        generatedChoiceRow.appendChild(generatedChoiceText);
+                    });
+
+                    generatedChoicesTable.appendChild(generatedChoiceRow);
+                    generatedQuestionItem.appendChild(generatedChoicesTable);
+                    generatedMCQsText.appendChild(generatedQuestionItem);
+                    generatedMCQsContainer.appendChild(generatedMCQsText);
+                });
+
+            }
+
+            blockElement = generatedMCQsContainer;
+        }
+
         if (blockElement) {
             contentContainer.appendChild(blockElement);
 
@@ -377,6 +491,8 @@ function saveEdit() {
     const showWordListElement = editorBody.querySelector("#showWordListCheckbox");
     const showWordListValue = showWordListElement ? showWordListElement.checked : true;
 
+
+
     // save when editing existing block
     if (currentEditingBlockId !== null) {
         const block = exerciseBlocks.find(b => b.id === currentEditingBlockId);
@@ -397,6 +513,28 @@ function saveEdit() {
                     showWordList: showWordListValue,
                     wordList: makeWordListFromPassage(bodyValue),
                     showLetter: block.data.showLetter
+                    };
+            } else if (block.type === "multiple-choice-question") {
+                const questions = makeMcqQuestions(bodyValue);
+
+                questions.forEach((question) => {
+                    const correctAnswer = question.choices[question.correctIndex];
+                    const shuffled = [...question.choices];
+
+                    for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                    }
+                    question.choices = shuffled;
+                    question.correctIndex = shuffled.indexOf(correctAnswer);
+                });
+
+                block.data = {
+                    heading: headingValue,
+                    text: bodyValue,
+                    numbered: numberedValue,
+                    showLetter: block.data.showLetter,
+                    questions: questions
                     };
             } else {
                 block.data.text = bodyValue;
@@ -426,6 +564,27 @@ function saveEdit() {
                 showWordList: showWordListValue,
                 wordList: makeWordListFromPassage(bodyValue),
                 showLetter: true
+                };
+        } else if (currentEditingType === "multiple-choice-question") {
+                const questions = makeMcqQuestions(bodyValue);
+                
+                questions.forEach((question) => {
+                    const correctAnswer = question.choices[question.correctIndex];
+                    const shuffled = [...question.choices];
+
+                    for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                    }
+                    question.choices = shuffled;
+                    question.correctIndex = shuffled.indexOf(correctAnswer);
+                });
+            data = {
+                heading: headingValue,
+                text: bodyValue,
+                numbered: numberedValue,
+                showLetter: true,
+                questions: questions
                 };
         } else {
             data = {
@@ -469,7 +628,7 @@ function editExercise(blockId) {
 
     // call the type's editor-builder function with existing data
     // for simple text-based types (title, instruction) we pass block.data.text
-    if (block.type === "scrambled-sentence" || block.type === "blanks-passage") {
+    if (block.type === "scrambled-sentence" || block.type === "blanks-passage" || block.type === "multiple-choice-question") {
         typeConfig.buttonFunction(block.data || {});
     } else {
         typeConfig.buttonFunction(block.data && block.data.text ? block.data.text : "");
@@ -641,7 +800,46 @@ function createEssayQuestion() {
 
 }
 
-function createMultipleChoiceQuestions() {
+function createMultipleChoiceQuestions(data = { heading: "", text: "" }) {
+    headingContainer.innerHTML = `
+        <label for="create-mcq-heading" class="label-top">Instruction (Optional):</label>
+        <textarea id="create-mcq-heading" class="heading-input" placeholder="Choose the correct answers.">${data.heading || ""}</textarea> 
+    `;
+
+    exerciseDescription.textContent = "Please type the questions you wish to use in the text area, followed by a list of answers in [square/brackets/separated/by/slashes]. The first option must be the correct answer. Add any additional questions on a new line. Use a maximum of four possible answers.";
+
+    const numberedChecked = data.numbered ? "checked" : "";
+
+    editorBody.innerHTML = `
+        <textarea class="text-box">${data.text || ""}</textarea>
+        <div class="checkboxGroup">
+            <label for="numberedCheckbox">Number answers: </label><input type="checkbox" id="numberedCheckbox" ${numberedChecked}>
+        </div>
+    `;
+}
+
+function makeMcqQuestions(text) {
+    let questions = []
+    const sentencesWithChoices = text.split("\n");
+    sentencesWithChoices.forEach((senWithChoices) => {
+        const rawChoices = senWithChoices.match(/\[(.*?)\]/);
+        if (!rawChoices) return;
+
+        const promptSentence = senWithChoices.replace(/\[(.*?)\]/g, "").trim();
+        const choiceGroup = rawChoices[1];
+        const answerChoices = choiceGroup.split("/");
+
+        const question = {
+            prompt: promptSentence,
+            choices: answerChoices,
+            correctIndex: 0
+        }
+
+        questions.push(question)
+
+    })
+
+    return questions;
 
 }
 

@@ -190,6 +190,7 @@ ul {
     background: white;
     height: 1056px;
     margin-top: 24px;
+    line-height: 1.35;
 }
 
 .checkboxGroup {
@@ -226,6 +227,20 @@ label {
 .cloze-test-choices {
     width: 100%;
     text-align: left;
+}
+
+.multiple-choice-options {
+    table-layout: fixed;
+}
+
+.letter-cell {
+    text-align: right;
+    font-weight: bold;
+    width: 50px;
+}
+
+.choice-cell {
+    width: 5em;
 }
 
 .answer-label {
