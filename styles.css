@@ -188,7 +188,7 @@ ul {
     margin: auto;
     padding: 96px;
     background: white;
-    height: 1056px;
+    /*height: 1056px;*/
     margin-top: 24px;
     line-height: 1.35;
 }
@@ -276,4 +276,30 @@ label {
 .essay-rows td {
     border: 1px solid black;
     height: 2em;
+}
+
+.title-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.title-labels {
+    text-align: left;
+    vertical-align: top;
+}
+
+.title-left-cell {
+    font-size: 32px;
+    font-weight: bold;
+    width: 430px;
+    vertical-align: top;
+}
+
+.title-right-cell {
+    font-size: 16px;
+}
+
+.title-values {
+    text-align: right;
+    vertical-align: top;
 }

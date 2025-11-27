@@ -20,7 +20,7 @@ let exerciseBlocks = [
  {
     id: 1,
     type: "title",
-    data: { text: "My Worksheet", showLetter: false }
+    data: { text: "My Worksheet", showLetter: false, includeName: true, includeClass: true, includeDate: true }
   },
   {
     id: 2,
@@ -182,19 +182,66 @@ function renderExerciseBlocks() {
         }
 
         if (block.type === "title") {
-            const generatedTitle = document.createElement("h1");
-            const baseText = block.data.text || "";
-            generatedTitle.textContent = letter ? `${letter}. ${baseText}` : baseText;
-            if (currentViewMode !== "student") {
-                const br = document.createElement("br");
-                const answerKeyIndicatorText = document.createElement("span");
-                answerKeyIndicatorText.textContent = "(Answer Key)";
-                answerKeyIndicatorText.classList.add("answer-label");
+            const table = document.createElement("table");
+            table.classList.add("title-table");
 
-                generatedTitle.appendChild(br);
-                generatedTitle.appendChild(answerKeyIndicatorText);
+            const row1 = document.createElement("tr");
+
+            // LEFT CELL: title + optional (Answer Key)
+            const leftCell = document.createElement("td");
+            leftCell.classList.add("title-left-cell");
+
+            const baseText = block.data.text || "";
+            const displayText = block.data.showLetter && letter
+                ? `${letter}. ${baseText}`
+                : baseText;
+
+            if (currentViewMode === "student") {
+                // just the title
+                leftCell.textContent = displayText;
+            } else {
+                // title + "(Answer Key)" on next line
+                const titleContainer = document.createElement("div");
+                titleContainer.textContent = displayText;
+
+                const br = document.createElement("br");
+                const answerKeySpan = document.createElement("span");
+                answerKeySpan.textContent = "(Answer Key)";
+                answerKeySpan.classList.add("answer-label");
+
+                titleContainer.appendChild(br);
+                titleContainer.appendChild(answerKeySpan);
+                leftCell.appendChild(titleContainer);
             }
-            blockElement = generatedTitle;
+
+            row1.appendChild(leftCell);
+
+            // LABEL + VALUE COLUMNS (same as before)
+            const labelCell = document.createElement("td");
+            labelCell.classList.add("title-labels");
+
+            const valueCell = document.createElement("td");
+            valueCell.classList.add("title-values");
+
+            const addField = (label) => {
+                const labelLine = document.createElement("div");
+                labelLine.textContent = `${label}:`;
+                labelCell.appendChild(labelLine);
+
+                const valueLine = document.createElement("div");
+                valueLine.textContent = "______________";
+                valueCell.appendChild(valueLine);
+            };
+
+            if (block.data.includeName)  addField("Name");
+            if (block.data.includeClass) addField("Class");
+            if (block.data.includeDate)  addField("Date");
+
+            row1.appendChild(labelCell);
+            row1.appendChild(valueCell);
+            table.appendChild(row1);
+
+            blockElement = table;
         }
 
         if (block.type === "instruction") {
@@ -491,6 +538,15 @@ function saveEdit() {
     const showWordListElement = editorBody.querySelector("#showWordListCheckbox");
     const showWordListValue = showWordListElement ? showWordListElement.checked : true;
 
+    const includeNameElement  = editorBody.querySelector("#includeNameCheckbox");
+
+    const includeClassElement = editorBody.querySelector("#includeClassCheckbox");
+    const includeDateElement  = editorBody.querySelector("#includeDateCheckbox");
+
+    const includeNameValue  = includeNameElement ? includeNameElement.checked : true;
+    const includeClassValue = includeClassElement ? includeClassElement.checked : true;
+    const includeDateValue  = includeDateElement ? includeDateElement.checked : true;
+
     if (bodyValue === "") {
         alert("Please type your exercise into the text box.");
         return;
@@ -499,8 +555,16 @@ function saveEdit() {
     // save when editing existing block
     if (currentEditingBlockId !== null) {
         const block = exerciseBlocks.find(b => b.id === currentEditingBlockId);
-        if (block) {
-            if (block.type === "scrambled-sentence") {
+    if (block) {
+        if (block.type === "title") {
+            block.data = {
+                text: bodyValue,
+                showLetter: block.data.showLetter,
+                includeName: includeNameValue,
+                includeClass: includeClassValue,
+                includeDate: includeDateValue
+            };
+            } else if (block.type === "scrambled-sentence") {
                 block.data = {
                     heading: headingValue,
                     text: bodyValue,
@@ -559,7 +623,15 @@ function saveEdit() {
 
         let data;
 
-        if (currentEditingType === "scrambled-sentence") {
+        if (currentEditingType === "title") {
+            data = {
+                text: bodyValue,
+                showLetter: true,
+                includeName: includeNameValue,
+                includeClass: includeClassValue,
+                includeDate: includeDateValue
+            };
+        } else if (currentEditingType === "scrambled-sentence") {
             data = {
                 heading: headingValue,
                 text: bodyValue,
@@ -641,6 +713,8 @@ function editExercise(blockId) {
     // for simple text-based types (title, instruction) we pass block.data.text
     if (block.type === "scrambled-sentence" || block.type === "blanks-passage" || block.type === "multiple-choice-question") {
         typeConfig.buttonFunction(block.data || {});
+    } else if (block.type === "title") {
+        typeConfig.buttonFunction(block.data || {});
     } else {
         typeConfig.buttonFunction(block.data && block.data.text ? block.data.text : "");
     }
@@ -713,10 +787,22 @@ function handleModeChange() {
 
 // functions to build UI for individual exercises
 
-function createTitleText(initialText = "") {
+function createTitleText(data = { text: "", includeName: true, includeClass: true, includeDate: true }) {
     headingContainer.innerHTML = "";
     exerciseDescription.textContent = "Please type the text for your title in the text area.";
-    editorBody.innerHTML = `<textarea class="text-box">${initialText}</textarea>`
+
+    const nameChecked  = data.includeName !== false ? "checked" : "";
+    const classChecked = data.includeClass !== false ? "checked" : "";
+    const dateChecked  = data.includeDate !== false ? "checked" : "";
+
+    editorBody.innerHTML = `
+        <textarea class="text-box">${data.text || ""}</textarea>
+        <div class="checkboxGroup">
+            <label><input type="checkbox" id="includeNameCheckbox" ${nameChecked}> Include Name</label>
+            <label><input type="checkbox" id="includeClassCheckbox" ${classChecked}> Include Class</label>
+            <label><input type="checkbox" id="includeDateCheckbox" ${dateChecked}> Include Date</label>
+        </div>
+    `;
 }
 
 function createInstructionText(initialText = "") {
@@ -731,7 +817,7 @@ function createScrambledSentences(data = { heading: "", text: "" }) {
         <textarea id="scramble-heading" class="heading-input" placeholder="Unscramble the following sentences.">${data.heading || ""}</textarea> 
     `;
 
-    exerciseDescription.textContent = "Please type the sentences you wish to use in the text area.";
+    exerciseDescription.textContent = "Please type the sentences you wish to use in the text area. Put each sentence on a new line.";
 
     const numberedChecked = data.numbered ? "checked" : "";
     const answerChecked = data.showAnswerLines ? "checked" : "";
