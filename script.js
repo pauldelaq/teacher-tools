@@ -63,8 +63,29 @@ let exerciseBlocks = [
         ],
         showLetter: true, numbered: true
     }
-    }
-];
+    },
+{
+  id: 6,
+  type: "word-matching",
+  data: {
+    heading: "Match words to create phrases.",
+    text: "The dog / barks\nThe cat / meows\nThe pig / oinks\nThe wolf / howls",
+    pairs: [
+      { left: "The dog",  right: "barks"  },
+      { left: "The cat",  right: "meows"  },
+      { left: "The pig",  right: "oinks"  },
+      { left: "The wolf", right: "howls"  }
+    ],
+    rightOptions: [
+      { text: "meows", pairIndex: 1 },
+      { text: "howls", pairIndex: 3 },
+      { text: "barks", pairIndex: 0 },
+      { text: "oinks", pairIndex: 2 }
+    ],
+    numbered: true,
+    showLetter: true
+  }
+}];
 
 const exerciseTypes = [
     {
@@ -250,6 +271,85 @@ function renderExerciseBlocks() {
             generatedPar.textContent = letter ? `${letter}. ${baseText}` : baseText;
             generatedPar.classList.add("bold");
             blockElement = generatedPar;
+        }
+
+        if (block.type === "word-matching") {
+            const generatedPhrases = document.createElement("div");
+
+            let hasHeading = false;
+            if (block.data.heading) {
+                hasHeading = true;
+                const headingPar = document.createElement("p");
+                const baseHeading = block.data.heading || "";
+                headingPar.textContent = letter ? `${letter}. ${baseHeading}` : baseHeading;
+                headingPar.classList.add("bold");
+                generatedPhrases.appendChild(headingPar);
+            } else if (letter) {
+                const letterLine = document.createElement("p");
+                letterLine.textContent = `${letter}.`;
+                letterLine.classList.add("bold");
+                generatedPhrases.appendChild(letterLine);
+            }
+
+            const matchTable = document.createElement("table");
+            matchTable.classList.add("matching-layout");
+            if (currentViewMode === "student") {
+                const pairs = block.data.pairs;
+                const options = block.data.rightOptions;
+                pairs.forEach((item, index) => {
+                    const row = document.createElement("tr");
+
+                    const leftCell = document.createElement("td");
+                    leftCell.innerHTML = `___ ${index + 1}. ${item.left}`;
+                    row.appendChild(leftCell);
+
+                    const rightCell = document.createElement("td");
+                    const letter = String.fromCharCode(97 + index);
+                    const option = options[index];
+                    if (option) {
+                        rightCell.innerHTML = `<span class="bold">${letter}.</span> ${option.text}`;
+                    }
+                    row.appendChild(rightCell);
+
+                    matchTable.appendChild(row);
+
+                });
+
+            } else {
+                const pairs = block.data.pairs;
+                const options = block.data.rightOptions;
+                pairs.forEach((item, index) => {
+                    const row = document.createElement("tr");
+
+                    const leftCell = document.createElement("td");
+
+                    // find which option matches this left-side index
+                    const correctOptionIndex = options.findIndex(o => o.pairIndex === index);
+
+                    // convert to a/b/c/d
+                    const abcd = String.fromCharCode(97 + correctOptionIndex);
+
+                    leftCell.innerHTML = `<span class="underlined">&nbsp;&nbsp;${abcd}&nbsp;&nbsp;</span> ${index + 1}. ${item.left}`;
+
+                    row.appendChild(leftCell);
+
+                    const rightCell = document.createElement("td");
+                    const letter = String.fromCharCode(97 + index);
+                    const option = options[index];
+                    if (option) {
+                        rightCell.innerHTML = `<span class="bold">${letter}.</span> ${option.text}`;
+                    }
+                    row.appendChild(rightCell);
+
+                    matchTable.appendChild(row);
+
+                });
+
+            }
+
+            generatedPhrases.appendChild(matchTable);
+            blockElement = generatedPhrases;
+
         }
 
         if (block.type === "scrambled-sentence") {
@@ -611,7 +711,21 @@ function saveEdit() {
                     showLetter: block.data.showLetter,
                     questions: questions
                     };
-            } else {
+            } else if (block.type === "word-matching") {
+                const isValid = validateMatchingInput(bodyValue);
+                if (!isValid) return;
+
+                const { pairs, rightOptions } = makeWordMatchingData(bodyValue);
+
+            block.data = {
+                heading: headingValue,
+                text: bodyValue,
+                showLetter: block.data.showLetter,
+                numbered: numberedValue,
+                pairs,
+                rightOptions
+            };
+         } else {
                 block.data.text = bodyValue;
             }
         }
@@ -669,6 +783,20 @@ function saveEdit() {
                 showLetter: true,
                 questions: questions
                 };
+        } else if (currentEditingType === "word-matching") {
+            const isValid = validateMatchingInput(bodyValue);
+            if (!isValid) return;
+
+            const { pairs, rightOptions } = makeWordMatchingData(bodyValue);
+
+            data = {
+                heading: headingValue,
+                text: bodyValue,
+                showLetter: true,
+                numbered: numberedValue,
+                pairs,
+                rightOptions
+            };
         } else {
             data = {
                 text: bodyValue,
@@ -711,7 +839,7 @@ function editExercise(blockId) {
 
     // call the type's editor-builder function with existing data
     // for simple text-based types (title, instruction) we pass block.data.text
-    if (block.type === "scrambled-sentence" || block.type === "blanks-passage" || block.type === "multiple-choice-question") {
+    if (block.type === "scrambled-sentence" || block.type === "blanks-passage" || block.type === "multiple-choice-question" || block.type === "word-matching") {
         typeConfig.buttonFunction(block.data || {});
     } else if (block.type === "title") {
         typeConfig.buttonFunction(block.data || {});
@@ -881,8 +1009,86 @@ function createClozeTest() {
 
 }
 
-function createWordMatching() {
+function createWordMatching(data = { heading: "", text: "" }) {
+    headingContainer.innerHTML = `
+        <label for="create-matching-heading" class="label-top">Instruction (Optional):</label>
+        <textarea id="create-matching-heading" class="heading-input" placeholder="Match words to create phrases.">${data.heading || ""}</textarea> 
+    `;
 
+    exerciseDescription.textContent = "Please type the phrases you want split with slashes. Add any additional phrases on a new line.";
+
+    const numberedChecked = data.numbered ? "checked" : "";
+
+    editorBody.innerHTML = `
+        <textarea class="text-box">${data.text || ""}</textarea>
+        <div class="checkboxGroup">
+            <label for="numberedCheckbox">Number answers: </label><input type="checkbox" id="numberedCheckbox" ${numberedChecked}>
+        </div>
+    `;
+}
+
+function makeWordMatchingData(bodyValue) {
+    const rawPairs = bodyValue.split("\n");
+    const pairs = [];
+
+    rawPairs.forEach((line) => {
+        const trimmed = line.trim();
+        if (!trimmed) return;
+
+        const splitArray = trimmed.split("/");
+        if (splitArray.length !== 2) return;
+
+        const left  = splitArray[0].trim();
+        const right = splitArray[1].trim();
+
+        pairs.push({ left, right });
+    });
+
+    const rightOptions = [];
+    pairs.forEach((pair, index) => {
+        const text = pair.right;
+        const pairIndex = index;
+
+        rightOptions.push({ text, pairIndex });
+    });
+
+    for (let i = rightOptions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [rightOptions[i], rightOptions[j]] = [rightOptions[j], rightOptions[i]];
+    }
+
+    return { pairs, rightOptions };
+
+}
+
+function validateMatchingInput(bodyValue) {
+    const lines = bodyValue.split("\n");
+
+    for (let i = 0; i < lines.length; i++) {
+        const trimmed = lines[i].trim();
+        if (!trimmed) continue; // skip blank lines
+
+        // Check for a slash
+        if (!trimmed.includes("/")) {
+            alert(`Don't forget to add slashes between your pairs (problem on line ${i + 1}).`);
+            return false;
+        }
+
+        // Check that there is only one slash
+        const slashCount = (trimmed.match(/\//g) || []).length;
+        if (slashCount > 1) {
+            alert(`Please use only one slash per pair (problem on line ${i + 1}).`);
+            return false;
+        }
+    }
+
+    // Check more than one line total
+    if (lines.filter(l => l.trim()).length < 2) {
+        alert("Please enter more than one line.");
+        return false;
+    }
+
+    return true;
 }
 
 function createWordGrid() {
