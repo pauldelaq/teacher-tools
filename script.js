@@ -275,6 +275,7 @@ function renderExerciseBlocks() {
 
         if (block.type === "word-matching") {
             const generatedPhrases = document.createElement("div");
+            generatedPhrases.classList.add("simulate-line-height");
 
             let hasHeading = false;
             if (block.data.heading) {
@@ -299,16 +300,28 @@ function renderExerciseBlocks() {
                 pairs.forEach((item, index) => {
                     const row = document.createElement("tr");
 
+                    const spaceAndNumber = document.createElement("td");
+                    spaceAndNumber.classList.add("space-and-number");
+                    spaceAndNumber.innerText = `___ ${index + 1}. `
+                    row.appendChild(spaceAndNumber);
+
                     const leftCell = document.createElement("td");
-                    leftCell.innerHTML = `___ ${index + 1}. ${item.left}`;
+                    leftCell.innerText = `${item.left}`;
+                    leftCell.classList.add("matching-left");
                     row.appendChild(leftCell);
 
-                    const rightCell = document.createElement("td");
+                    const letterCell = document.createElement("td");
+                    letterCell.classList.add("letter-cell");
                     const letter = String.fromCharCode(97 + index);
+                    letterCell.innerHTML = `${letter}. `
+                    row.appendChild(letterCell);
+
+                    const rightCell = document.createElement("td");
                     const option = options[index];
                     if (option) {
-                        rightCell.innerHTML = `<span class="bold">${letter}.</span> ${option.text}`;
+                        rightCell.innerText = `${option.text}`;
                     }
+                    rightCell.classList.add("matching-right");
                     row.appendChild(rightCell);
 
                     matchTable.appendChild(row);
@@ -329,16 +342,27 @@ function renderExerciseBlocks() {
                     // convert to a/b/c/d
                     const abcd = String.fromCharCode(97 + correctOptionIndex);
 
-                    leftCell.innerHTML = `<span class="underlined">&nbsp;&nbsp;${abcd}&nbsp;&nbsp;</span> ${index + 1}. ${item.left}`;
+                    const spaceAndNumber = document.createElement("td");
+                    spaceAndNumber.classList.add("space-and-number");
+                    spaceAndNumber.innerHTML = `<span class="underlined">&nbsp;&nbsp;${abcd}&nbsp;&nbsp;</span> ${index + 1}. `;
+                    row.appendChild(spaceAndNumber);
 
+                    leftCell.innerText = `${item.left}`;
+                    leftCell.classList.add("matching-left");
                     row.appendChild(leftCell);
 
-                    const rightCell = document.createElement("td");
+                    const letterCell = document.createElement("td");
+                    letterCell.classList.add("letter-cell");
                     const letter = String.fromCharCode(97 + index);
+                    letterCell.innerHTML = `${letter}. `
+                    row.appendChild(letterCell);
+
+                    const rightCell = document.createElement("td");
                     const option = options[index];
                     if (option) {
-                        rightCell.innerHTML = `<span class="bold">${letter}.</span> ${option.text}`;
+                        rightCell.innerText = `${option.text}`;
                     }
+                    rightCell.classList.add("matching-right");
                     row.appendChild(rightCell);
 
                     matchTable.appendChild(row);
@@ -459,6 +483,7 @@ function renderExerciseBlocks() {
 
         if (block.type === "multiple-choice-question") {
             const generatedMCQsContainer = document.createElement("div");
+            generatedMCQsContainer.classList.add("simulate-line-height");
 
             let hasHeading = false;
             if (block.data.heading) {
@@ -481,29 +506,50 @@ function renderExerciseBlocks() {
                 questionsToRender.forEach((question, index) => {
                     const generatedQuestionItem = document.createElement("div");
 
-                    generatedQuestionItem.textContent = `___ ${index + 1}. ${question.prompt}`;
-
-                    generatedChoicesTable = document.createElement("table");
+                    // Single table for question + choices
+                    const generatedChoicesTable = document.createElement("table");
                     generatedChoicesTable.classList.add("multiple-choice-options");
 
+                    // ----- First row: space-and-number + question -----
+                    const questionRow = document.createElement("tr");
+
+                    const spaceAndNumber = document.createElement("td");
+                    spaceAndNumber.classList.add("space-and-number");
+                    spaceAndNumber.textContent = `___ ${index + 1}. `;
+                    questionRow.appendChild(spaceAndNumber);
+
+                    // Compute how many columns the choices will use
+                    const choiceCols = question.choices.length * 2; // letter + text per choice
+
+                    const questionText = document.createElement("td");
+                    questionText.colSpan = choiceCols;
+                    questionText.textContent = `${question.prompt}`;
+                    questionRow.appendChild(questionText);
+
+                    generatedChoicesTable.appendChild(questionRow);
+
+                    // ----- Second row: buffer cell + all choices in one row -----
                     const generatedChoiceRow = document.createElement("tr");
-                    
-                    question.choices.forEach((choice, index) => {
+
+                    const bufferCell = document.createElement("td");
+                    bufferCell.classList.add("buffer-cell");
+                    generatedChoiceRow.appendChild(bufferCell);
+
+                    question.choices.forEach((choice, choiceIndex) => {
                         const letterCell = document.createElement("td");
                         letterCell.classList.add("letter-cell");
-                        const letter = String.fromCharCode(97 + index);
-
+                        const letter = String.fromCharCode(97 + choiceIndex);
                         letterCell.innerHTML = `${letter}.`;
                         generatedChoiceRow.appendChild(letterCell);
 
                         const generatedChoiceText = document.createElement("td");
                         generatedChoiceText.classList.add("choice-cell");
-                        generatedChoiceText.textContent = `${choice}`
-
+                        generatedChoiceText.textContent = `${choice}`;
                         generatedChoiceRow.appendChild(generatedChoiceText);
                     });
 
                     generatedChoicesTable.appendChild(generatedChoiceRow);
+
                     generatedQuestionItem.appendChild(generatedChoicesTable);
                     generatedMCQsText.appendChild(generatedQuestionItem);
                     generatedMCQsContainer.appendChild(generatedMCQsText);
@@ -514,36 +560,60 @@ function renderExerciseBlocks() {
                 questionsToRender.forEach((question, index) => {
                     const generatedQuestionItem = document.createElement("div");
 
+                    // Single table for question + choices (answer key view)
+                    const generatedChoicesTable = document.createElement("table");
+                    generatedChoicesTable.classList.add("multiple-choice-options");
+                    generatedMCQsContainer.classList.add("simulate-line-height");
+
                     const correctIndex = Number(question.correctIndex);
                     const abcd = String.fromCharCode(97 + correctIndex);
-                    generatedQuestionItem.innerHTML = `<span class="underlined">&nbsp;&nbsp;${abcd}&nbsp;&nbsp;</span> ${index + 1}. ${question.prompt}`;
 
-                    generatedChoicesTable = document.createElement("table");
-                    generatedChoicesTable.classList.add("multiple-choice-options");
+                    // ----- First row: underlined correct letter + number + question -----
+                    const questionRow = document.createElement("tr");
 
+                    const spaceAndNumber = document.createElement("td");
+                    spaceAndNumber.classList.add("space-and-number");
+                    // underline the correct letter, then show the number
+                    spaceAndNumber.innerHTML =
+                        `<span class="underlined">&nbsp;&nbsp;${abcd}&nbsp;&nbsp;</span> ${index + 1}. `;
+                    questionRow.appendChild(spaceAndNumber);
+
+                    // how many columns the choices will use in row 2 (same logic as student)
+                    const choiceCols = question.choices.length * 2; // letter + text per choice
+
+                    const questionText = document.createElement("td");
+                    questionText.colSpan = choiceCols;
+                    questionText.textContent = `${question.prompt}`;
+                    questionRow.appendChild(questionText);
+
+                    generatedChoicesTable.appendChild(questionRow);
+
+                    // ----- Second row: buffer cell + all choices in one row -----
                     const generatedChoiceRow = document.createElement("tr");
-                    
-                    question.choices.forEach((choice, index) => {
+
+                    const bufferCell = document.createElement("td");
+                    bufferCell.classList.add("buffer-cell");
+                    generatedChoiceRow.appendChild(bufferCell);
+
+                    question.choices.forEach((choice, choiceIndex) => {
                         const letterCell = document.createElement("td");
                         letterCell.classList.add("letter-cell");
-                        const letter = String.fromCharCode(97 + index);
-
+                        const letter = String.fromCharCode(97 + choiceIndex);
                         letterCell.innerHTML = `${letter}.`;
                         generatedChoiceRow.appendChild(letterCell);
 
                         const generatedChoiceText = document.createElement("td");
                         generatedChoiceText.classList.add("choice-cell");
-                        generatedChoiceText.textContent = `${choice}`
-
+                        generatedChoiceText.textContent = `${choice}`;
                         generatedChoiceRow.appendChild(generatedChoiceText);
                     });
 
                     generatedChoicesTable.appendChild(generatedChoiceRow);
+
                     generatedQuestionItem.appendChild(generatedChoicesTable);
                     generatedMCQsText.appendChild(generatedQuestionItem);
                     generatedMCQsContainer.appendChild(generatedMCQsText);
                 });
-
             }
 
             blockElement = generatedMCQsContainer;

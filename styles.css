@@ -231,16 +231,42 @@ label {
 
 .multiple-choice-options {
     table-layout: fixed;
+    padding-bottom: 1em;
+}
+
+.simulate-line-height {
+    line-height: 2em;
 }
 
 .letter-cell {
     text-align: right;
     font-weight: bold;
-    width: 50px;
+    width: 1em;
+    vertical-align: top;
+}
+
+.matching-left {
+    width: 200px;
+    vertical-align: top;
+}
+
+.matching-right {
+    width: 200px;
+    vertical-align: top;
+}
+
+.space-and-number {
+    width: 3em;
+    vertical-align: top;
+}
+
+.buffer-cell {
+    width: 2em;
 }
 
 .choice-cell {
-    width: 5em;
+    width: 6em;
+    vertical-align: top;
 }
 
 .answer-label {
@@ -248,7 +274,6 @@ label {
 }
 
 .matching-layout {
-    width: 100%;
     text-align: left;
 }
 
