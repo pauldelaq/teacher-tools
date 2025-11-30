@@ -85,7 +85,35 @@ let exerciseBlocks = [
     numbered: true,
     showLetter: true
   }
-}];
+},
+    {
+    id: 7,
+    type: "cloze-test",
+    data: {
+        heading: "Read the passage and choose the correct answers.",
+        text: "Cats typically have [two/three/four/six] ears. They generally like to eat [fish/cabbage/onions/pickles]. In cartoons, they often drink [milk/cola/tea/beer], but this is not realistic. Typically, they simply drink [water/tea/cola/wine].",
+        questions: [
+        {
+            choices: ["two", "three", "four", "six"],
+            correctIndex: 0
+        },
+        {
+            choices: ["cabbage", "fish", "onions", "pickles"],
+            correctIndex: 1
+        },
+        {
+            choices: ["cola", "tea", "milk", "beer"],
+            correctIndex: 2
+        },
+        {
+            choices: ["tea", "wine", "cola", "water"],
+            correctIndex: 3
+        }
+    ],
+        showLetter: true
+    }
+  }
+];
 
 const exerciseTypes = [
     {
@@ -554,7 +582,6 @@ function renderExerciseBlocks() {
                     generatedMCQsText.appendChild(generatedQuestionItem);
                     generatedMCQsContainer.appendChild(generatedMCQsText);
                 });
-
             } else {
                 const questionsToRender = block.data.questions;
                 questionsToRender.forEach((question, index) => {
@@ -617,6 +644,122 @@ function renderExerciseBlocks() {
             }
 
             blockElement = generatedMCQsContainer;
+        }
+
+        if (block.type === "cloze-test")  {
+            const generatedDiv = document.createElement("div");
+
+            let hasHeading = false;
+            if (block.data.heading) {
+                hasHeading = true;
+                const headingPar = document.createElement("p");
+                const baseHeading = block.data.heading || "";
+                headingPar.textContent = letter ? `${letter}. ${baseHeading}` : baseHeading;
+                headingPar.classList.add("bold");
+                generatedDiv.appendChild(headingPar);
+            } else if (letter) {
+                const letterLine = document.createElement("p");
+                letterLine.textContent = `${letter}.`;
+                letterLine.classList.add("bold");
+                generatedDiv.appendChild(letterLine);
+            }
+
+            const passage = document.createElement("p");
+            if (currentViewMode === "student") {
+                const passageSource = block.data.text;
+
+                let count = 0;
+                const passageWithNumberedBlanks = passageSource.replace(/\[.*?\]/g, () => {
+                    count++;
+                    return `<span class="bold">${count}.</span> ________`;
+                });
+
+                passage.innerHTML = passageWithNumberedBlanks;
+                generatedDiv.appendChild(passage);
+
+                const questions = block.data.questions;
+                const tableOfChoices = document.createElement("table");
+                tableOfChoices.classList.add("multiple-choice-options");
+                questions.forEach((question, index) => {
+                    const questionRow = document.createElement("tr");
+
+                    const spaceAndNumber = document.createElement("td");
+                    spaceAndNumber.classList.add("space-and-number");
+                    spaceAndNumber.textContent = `___ ${index + 1}. `;
+                    questionRow.appendChild(spaceAndNumber);
+
+                    question.choices.forEach((choice, choiceIndex) => {
+                        const letterCell = document.createElement("td");
+                        letterCell.classList.add("letter-cell");
+                        const letter = String.fromCharCode(97 + choiceIndex);
+                        letterCell.innerHTML = `${letter}.`;
+                        questionRow.appendChild(letterCell);
+
+                        const generatedChoiceText = document.createElement("td");
+                        generatedChoiceText.classList.add("choice-cell");
+                        generatedChoiceText.textContent = `${choice}`;
+                        questionRow.appendChild(generatedChoiceText);
+                    });
+
+                    tableOfChoices.appendChild(questionRow);
+                })
+
+                generatedDiv.appendChild(tableOfChoices);
+
+            } else {
+                const passageSource = block.data.text;
+                const questions = block.data.questions || [];
+
+                let count = 0;
+                const passageWithAnswers = passageSource.replace(/\[.*?\]/g, () => {
+                    const question = questions[count];
+                    count++;
+
+                    if (!question) {
+                        return `<span class="bold">${count}.</span> <span class="underlined">________</span>`;
+                    }
+
+                    const correctChoice = question.choices[question.correctIndex];
+                    return `<span class="bold">${count}.</span> <span class="underlined">${correctChoice}</span>`;
+                });
+
+                passage.innerHTML = passageWithAnswers;
+                generatedDiv.appendChild(passage);
+
+                const tableOfChoices = document.createElement("table");
+                tableOfChoices.classList.add("multiple-choice-options");
+                questions.forEach((question, index) => {
+                    const questionRow = document.createElement("tr");
+
+                    const correctIndex = Number(question.correctIndex);
+                    const abcd = String.fromCharCode(97 + correctIndex);
+
+                    const spaceAndNumber = document.createElement("td");
+                    spaceAndNumber.classList.add("space-and-number");
+                    spaceAndNumber.innerHTML =
+                        `<span class="underlined">&nbsp;&nbsp;${abcd}&nbsp;&nbsp;</span> ${index + 1}. `;
+                    questionRow.appendChild(spaceAndNumber);
+
+                    question.choices.forEach((choice, choiceIndex) => {
+                        const letterCell = document.createElement("td");
+                        letterCell.classList.add("letter-cell");
+                        const letter = String.fromCharCode(97 + choiceIndex);
+                        letterCell.innerHTML = `${letter}.`;
+                        questionRow.appendChild(letterCell);
+
+                        const generatedChoiceText = document.createElement("td");
+                        generatedChoiceText.classList.add("choice-cell");
+                        generatedChoiceText.textContent = `${choice}`;
+                        questionRow.appendChild(generatedChoiceText);
+                    });
+
+                    tableOfChoices.appendChild(questionRow);
+                })
+
+                generatedDiv.appendChild(tableOfChoices);
+            }
+
+            blockElement = generatedDiv;
         }
 
         if (blockElement) {
@@ -795,7 +938,32 @@ function saveEdit() {
                 pairs,
                 rightOptions
             };
-         } else {
+            } else if (block.type === "cloze-test") {
+                const isValid = validateClozeInput(bodyValue);
+                if (!isValid) return;
+
+                const questions = makeClozeQuestions(bodyValue);
+
+                questions.forEach((question) => {
+                    const correctAnswer = question.choices[question.correctIndex];
+                    const shuffled = [...question.choices];
+
+                    for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                    }
+                    question.choices = shuffled;
+                    question.correctIndex = shuffled.indexOf(correctAnswer);
+                });
+
+                block.data = {
+                    heading: headingValue,
+                    text: bodyValue,
+                    showLetter: block.data.showLetter,
+                    questions: questions
+                    };
+            }
+          else {
                 block.data.text = bodyValue;
             }
         }
@@ -867,6 +1035,32 @@ function saveEdit() {
                 pairs,
                 rightOptions
             };
+
+        } else if (currentEditingType === "cloze-test") {
+            const isValid = validateClozeInput(bodyValue);
+            if (!isValid) return;
+
+            const questions = makeClozeQuestions(bodyValue);
+
+            questions.forEach((question) => {
+                const correctAnswer = question.choices[question.correctIndex];
+                const shuffled = [...question.choices];
+
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                question.choices = shuffled;
+                question.correctIndex = shuffled.indexOf(correctAnswer);
+            });
+
+            data = {
+                heading: headingValue,
+                text: bodyValue,
+                showLetter: true,
+                questions
+            };
+    
         } else {
             data = {
                 text: bodyValue,
@@ -909,7 +1103,7 @@ function editExercise(blockId) {
 
     // call the type's editor-builder function with existing data
     // for simple text-based types (title, instruction) we pass block.data.text
-    if (block.type === "scrambled-sentence" || block.type === "blanks-passage" || block.type === "multiple-choice-question" || block.type === "word-matching") {
+    if (block.type === "scrambled-sentence" || block.type === "blanks-passage" || block.type === "multiple-choice-question" || block.type === "word-matching" || block.type === "cloze-test") {
         typeConfig.buttonFunction(block.data || {});
     } else if (block.type === "title") {
         typeConfig.buttonFunction(block.data || {});
@@ -1075,10 +1269,6 @@ function makeWordListFromPassage(text) {
     return shuffled;
 }
 
-function createClozeTest() {
-
-}
-
 function createWordMatching(data = { heading: "", text: "" }) {
     headingContainer.innerHTML = `
         <label for="create-matching-heading" class="label-top">Instruction (Optional):</label>
@@ -1095,6 +1285,73 @@ function createWordMatching(data = { heading: "", text: "" }) {
             <label for="numberedCheckbox">Number answers: </label><input type="checkbox" id="numberedCheckbox" ${numberedChecked}>
         </div>
     `;
+}
+function createClozeTest(data = { heading: "", text: ""}) {
+    headingContainer.innerHTML = `
+        <label for="create-cloze-test-heading" class-"label-top">Instruction (Optional):</label>
+        <textarea id="create-cloze-test-heading" class="heading-input" placeholder="Read the passage and choose the correct answers.">${data.heading || ""}</textarea>
+    `;
+
+    exerciseDescription.textContent = "Please type the passage you wish to use in the text area. Enclose each word you want removed in [square/brackets/separated/by/slashes/for/each/possible/choice]. The first option must be the correct answer.  Use a maximum of four possible choices."
+
+    editorBody.innerHTML = `
+        <textarea class="text-box">${data.text || ""}</textarea>
+    `
+}
+
+function validateClozeInput(bodyValue) {
+    const matches = bodyValue.match(/\[(.*?)\]/g);
+
+    // No square brackets
+    if (!matches) {
+        alert(`Don't forget to add [square/brackets/with/slashes] for your answer choices.`);
+        return false;
+    }
+
+    for (let i = 0; i < matches.length; i++) {
+        const item = matches[i];
+        const inner = item.slice(1, -1);
+        const choicesArray = inner.split("/").map(c => c.trim());
+
+        // Duplicate choices
+        const hasDuplicates = new Set(choicesArray).size !== choicesArray.length;
+        if (hasDuplicates) {
+            alert(`Please don't use the same answer more than once.`);
+            return false;
+        }
+
+        // Too many choices
+        const slashCount = (inner.match(/\//g) || []).length;
+        if (slashCount > 3) {
+            alert(`Please use a maximum of four choices per blank.`);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function makeClozeQuestions(text) {
+    let questions = []
+
+    const rawChoicesWithBrackets = text.match(/\[(.*?)\]/g);
+    if (!rawChoicesWithBrackets) return;
+
+    rawChoicesWithBrackets.forEach((choicesWithBrackets) => {
+
+        const choicesWithoutBrackets = choicesWithBrackets.replace("[", "").replace("]", "").trim();
+        const answerChoices = choicesWithoutBrackets.split("/").map(choice => choice.trim());
+
+        const question = {
+            choices: answerChoices,
+            correctIndex: 0
+        }
+
+        questions.push(question)
+
+    })
+
+    return questions;
 }
 
 function makeWordMatchingData(bodyValue) {
