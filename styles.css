@@ -7,6 +7,10 @@
     --header-height: 60px;
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
     padding-top: var(--header-height);
     padding-bottom: var(--header-height);
@@ -23,6 +27,7 @@ body {
   right: 1em;
   top: 50%;
   transform: translateY(-50%);
+  padding-right: 6px;
 }
 
 .top-menu-button {
@@ -327,4 +332,67 @@ label {
 .title-values {
     text-align: right;
     vertical-align: top;
+}
+
+.left-space {
+    padding-left: 1em;
+}
+
+.lined {
+    width: 100%;
+    line-height: 1em;
+    border-spacing: 0;
+    padding: 0;
+}
+
+.box {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.box td {
+    border: 1px solid black;
+    height: 66px;
+    padding: 0;
+}
+
+.simple-lines {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.simple-lines td {
+    border: none;
+    border-bottom: 1px solid black;
+    height: 66px;
+    line-height: 1em;
+    padding: 0;
+}
+
+table.lined td {
+  padding: 0;
+  height: 22px;
+  line-height: 22px;
+}
+
+table.lined tr {
+    height: 1em;
+}
+
+td.top-lined {
+  border-top: 1px solid black;
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+}
+
+td.bottom-lined {
+  border-bottom: 1px solid black;
+  border-top: 1px dashed black;
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+}
+
+td.spacer-row {
+  border: none;
+  height: 1em;
 }

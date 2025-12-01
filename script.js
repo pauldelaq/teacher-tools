@@ -24,6 +24,11 @@ let exerciseBlocks = [
   },
   {
     id: 2,
+    type: "instruction",
+    data: { text: "Welcome! Hover over any exercise block to view more options.", showLetter: false }
+  },
+  {
+    id: 3,
     type: "scrambled-sentence",
     data: { heading: "Unscramble the sentences.", scrambledLines:
     [
@@ -32,11 +37,6 @@ let exerciseBlocks = [
     ],
     text: "The cat runs quickly.\nThe dog eats chicken for breakfast.",
     numbered: true, showAnswerLines: true, showLetter: true }
-  },
-  {
-    id: 3,
-    type: "instruction",
-    data: { text: "Note: Don't forget to finish your worksheet.", showLetter: true }
   },
     {
     id: 4,
@@ -48,7 +48,7 @@ let exerciseBlocks = [
     type: "multiple-choice-question",
     data: {
         heading: "Choose the correct answers.",
-        text: "How many legs do cats typically have? [four/three/two/one]\nWhat sound cats usually make? [meow/bark/moo]",
+        text: "How many legs do cats typically have? [four/three/two/one]\nWhat sound do cats usually make? [meow/bark/moo]",
         questions: [
         {
             prompt: "How many legs do cats typically have?",
@@ -112,6 +112,17 @@ let exerciseBlocks = [
     ],
         showLetter: true
     }
+  },
+    {
+    id: 8,
+    type: "essay-questions",
+    data: { 
+        heading: "Please answer in complete sentences.",
+        text: "How do you feel about cats? Please write 50 words.\nDo you like to eat fried chicken? Why or why not?\nWhy is the sky blue?",
+        showLetter: true,
+        answerBoxType: "lined",
+        answerBoxSize: "paragraph"
+    }
   }
 ];
 
@@ -142,7 +153,7 @@ const exerciseTypes = [
     },
         {
         id: "word-matching",
-        buttonContent: `<table class="matching-layout"><tr><td>apple</td><td> </td><td>orange</td></tr><tr><td>banana</td><td> </td><td>red</td></tr><tr><td>carrot</td><td> </td><td>yellow</td></tr></table>`,
+        buttonContent: `<table class="matching-layout"><tr><td>apple</td><td class="buffer-cell"> </td><td class="buffer-cell"> </td><td>orange</td></tr><tr><td>banana</td><td class="buffer-cell"> </td><td class="buffer-cell"> </td><td>red</td></tr><tr><td>carrot</td><td class="buffer-cell"> </td><td class="buffer-cell"> </td><td>yellow</td></tr></table>`,
         buttonCaption: "Matching Words / Phrases",
         buttonFunction: createWordMatching
     },
@@ -171,9 +182,9 @@ const exerciseTypes = [
         buttonFunction: createWordGrid
     },
     {
-        id: "essay-question",
-        buttonContent: `How do you feel about <span class="bold">cats</span>? Please write 150 words.<br><br><table class="essay-rows"><tr><td> </td></tr><tr><td> </td></tr><tr><td> </td></tr><tr><td> </td></tr></table>`,
-        buttonCaption: "Essay Question",
+        id: "essay-questions",
+        buttonContent: `How do you feel about <span class="bold">cats</span>? Please write 50 words.<br><br><table class="essay-rows"><tr><td> </td></tr><tr><td> </td></tr><tr><td> </td></tr><tr><td> </td></tr></table>`,
+        buttonCaption: "Long Answer / Essay Questions",
         buttonFunction: createEssayQuestion
     }
 ]
@@ -299,6 +310,95 @@ function renderExerciseBlocks() {
             generatedPar.textContent = letter ? `${letter}. ${baseText}` : baseText;
             generatedPar.classList.add("bold");
             blockElement = generatedPar;
+        }
+
+        if (block.type === "essay-questions") {
+            const generatedDiv = document.createElement("div");
+
+            let hasHeading = false;
+            if (block.data.heading) {
+                hasHeading = true;
+                const headingPar = document.createElement("p");
+                const baseHeading = block.data.heading || "";
+                headingPar.textContent = letter ? `${letter}. ${baseHeading}` : baseHeading;
+                headingPar.classList.add("bold");
+                generatedDiv.appendChild(headingPar);
+            } else if (letter) {
+                const letterLine = document.createElement("p");
+                letterLine.textContent = `${letter}.`;
+                letterLine.classList.add("bold");
+                generatedDiv.appendChild(letterLine);
+            }
+
+            const questions = block.data.text;
+            const questionsArray = questions.split("\n");
+
+            questionsArray.forEach((question, index) => {
+                const generatedQuestion = document.createElement("p");
+                generatedQuestion.innerHTML = `${index + 1}. ${question}`;
+                generatedDiv.appendChild(generatedQuestion);
+
+                const answerBox = document.createElement("table");
+                if (block.data.answerBoxType === "lined") {
+                    answerBox.classList.add("lined");
+                }
+                
+                if (block.data.answerBoxType === "box") {
+                    answerBox.classList.add("box");
+                }
+
+                if (block.data.answerBoxType === "simple-lines") {
+                    answerBox.classList.add("simple-lines");
+                }
+
+                let numberOfRowsToAdd;
+
+                if (block.data.answerBoxSize === "sentence") {
+                    numberOfRowsToAdd = 1;
+                }
+
+                if (block.data.answerBoxSize === "paragraph") {
+                    numberOfRowsToAdd = 3;
+                }
+
+                if (block.data.answerBoxSize === "half-page") {
+                    numberOfRowsToAdd = 5;
+                }
+
+                if (block.data.answerBoxSize === "full-page") {
+                    numberOfRowsToAdd = 10;
+                }
+
+                for (let i = 0; i < numberOfRowsToAdd; i++) {
+                    if (block.data.answerBoxType === "lined") {
+                        const generatedRowTop = document.createElement("tr");
+                        const cellTop = document.createElement("td");
+                        cellTop.classList.add("top-lined");
+                        generatedRowTop.appendChild(cellTop);
+                        answerBox.appendChild(generatedRowTop);
+
+                        const generatedRowBottom = document.createElement("tr");
+                        const cellBottom = document.createElement("td");
+                        cellBottom.classList.add("bottom-lined");
+                        generatedRowBottom.appendChild(cellBottom);
+                        answerBox.appendChild(generatedRowBottom);
+
+                        const spacerRow = document.createElement("tr");
+                        const cellSpacer = document.createElement("td");
+                        cellSpacer.classList.add("spacer-row");
+                        spacerRow.appendChild(cellSpacer);
+                        answerBox.appendChild(spacerRow);
+                    } else {
+                        const generatedRow = document.createElement("tr");
+                        const generatedCell = document.createElement("td");
+                        generatedRow.appendChild(generatedCell);
+                        answerBox.appendChild(generatedRow);
+                    }
+                }
+                generatedDiv.appendChild(answerBox);
+            });
+
+            blockElement = generatedDiv;
         }
 
         if (block.type === "word-matching") {
@@ -860,6 +960,13 @@ function saveEdit() {
     const includeClassValue = includeClassElement ? includeClassElement.checked : true;
     const includeDateValue  = includeDateElement ? includeDateElement.checked : true;
 
+    // Essay-questions: radio buttons for answer box type & size
+    const selectedTypeRadio = editorBody.querySelector('input[name="answerBoxType"]:checked');
+    const selectedSizeRadio = editorBody.querySelector('input[name="answerBoxSize"]:checked');
+
+    const answerBoxTypeValue = selectedTypeRadio ? selectedTypeRadio.value : "lined";
+    const answerBoxSizeValue = selectedSizeRadio ? selectedSizeRadio.value : "paragraph";
+
     if (bodyValue === "") {
         alert("Please type your exercise into the text box.");
         return;
@@ -962,8 +1069,15 @@ function saveEdit() {
                     showLetter: block.data.showLetter,
                     questions: questions
                     };
-            }
-          else {
+            } else if (block.type === "essay-questions") {
+                block.data = {
+                    heading: headingValue,
+                    text: bodyValue,
+                    showLetter: block.data.showLetter,
+                    answerBoxType: answerBoxTypeValue,
+                    answerBoxSize: answerBoxSizeValue
+                };
+            } else {
                 block.data.text = bodyValue;
             }
         }
@@ -1061,6 +1175,14 @@ function saveEdit() {
                 questions
             };
     
+        } else if (currentEditingType === "essay-questions") {
+            data = {
+                heading: headingValue,
+                text: bodyValue,
+                showLetter: true,
+                answerBoxType: answerBoxTypeValue,
+                answerBoxSize: answerBoxSizeValue
+            };
         } else {
             data = {
                 text: bodyValue,
@@ -1103,7 +1225,7 @@ function editExercise(blockId) {
 
     // call the type's editor-builder function with existing data
     // for simple text-based types (title, instruction) we pass block.data.text
-    if (block.type === "scrambled-sentence" || block.type === "blanks-passage" || block.type === "multiple-choice-question" || block.type === "word-matching" || block.type === "cloze-test") {
+    if (block.type === "scrambled-sentence" || block.type === "blanks-passage" || block.type === "multiple-choice-question" || block.type === "word-matching" || block.type === "cloze-test" || block.type === "essay-questions") {
         typeConfig.buttonFunction(block.data || {});
     } else if (block.type === "title") {
         typeConfig.buttonFunction(block.data || {});
@@ -1426,8 +1548,63 @@ function createScrambledWords() {
 
 }
 
-function createEssayQuestion() {
+function createEssayQuestion(data = { heading: "", text: "" }) {
+    headingContainer.innerHTML = `
+        <label for="create-essay-question-heading" class="label-top">Instruction (Optional):</label>
+        <textarea id="create-essay-question-heading" class="heading-input" placeholder="Please answer in complete sentences.">${data.heading || ""}</textarea>
+    `;
 
+    exerciseDescription.textContent = "Please enter your essay questions in the text area. Put each question on a new line.";
+
+    const typeValue = data.answerBoxType || "lined";
+    const sizeValue = data.answerBoxSize || "paragraph";
+
+    editorBody.innerHTML = `
+        <textarea class="text-box">${data.text || ""}</textarea>
+        <div class="checkboxGroup">
+            <fieldset>
+                <legend>Answer box type:</legend>
+
+                <div>
+                    <input type="radio" id="lined" name="answerBoxType" value="lined" ${typeValue === "lined" ? "checked" : ""} />
+                    <label for="lined">Lined</label>
+                </div>
+
+                <div>
+                    <input type="radio" id="box" name="answerBoxType" value="box" ${typeValue === "box" ? "checked" : ""} />
+                    <label for="box">Box</label>
+                </div>
+
+                <div>
+                    <input type="radio" id="simple-lines" name="answerBoxType" value="simple-lines" ${typeValue === "simple-lines" ? "checked" : ""} />
+                    <label for="simple-lines">Simple Lines</label>
+                </div>
+            </fieldset>
+            <fieldset>
+                <legend>Answer box size:</legend>
+
+                <div>
+                    <input type="radio" id="sentence" name="answerBoxSize" value="sentence" ${sizeValue === "sentence" ? "checked" : ""} />
+                    <label for="sentence">Single Sentence</label>
+                </div>
+
+                <div>
+                    <input type="radio" id="paragraph" name="answerBoxSize" value="paragraph" ${sizeValue === "paragraph" ? "checked" : ""} />
+                    <label for="paragraph">Paragraph</label>
+                </div>
+
+                <div>
+                    <input type="radio" id="half-page" name="answerBoxSize" value="half-page" ${sizeValue === "half-page" ? "checked" : ""} />
+                    <label for="half-page">Half-page</label>
+                </div>
+
+                <div>
+                    <input type="radio" id="full-page" name="answerBoxSize" value="full-page" ${sizeValue === "full-page" ? "checked" : ""} />
+                    <label for="full-page">Full-page</label>
+                </div>
+            </fieldset>
+        </div>
+    `;
 }
 
 function createMultipleChoiceQuestions(data = { heading: "", text: "" }) {
