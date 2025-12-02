@@ -36,12 +36,12 @@ let exerciseBlocks = [
     "eats / breakfast. / dog / for / chicken / The"
     ],
     text: "The cat runs quickly.\nThe dog eats chicken for breakfast.",
-    numbered: true, showAnswerLines: true, showLetter: true }
+    numbered: true, showAnswerLines: true, showLetter: true, showHeading: true }
   },
     {
     id: 4,
     type: "blanks-passage",
-    data: { heading: "Please fill in the blanks with appropriate words.", text: "Cats are [cute] animals that like to eat [fish]. Garfield is a famous [cat] that likes to eat [lasagna].", wordList: ["fish", "lasagna", "cat", "cute"], showWordList: true, showLetter: true }
+    data: { heading: "Please fill in the blanks with appropriate words.", text: "Cats are [cute] animals that like to eat [fish]. Garfield is a famous [cat] that likes to eat [lasagna].", wordList: ["fish", "lasagna", "cat", "cute"], showWordList: true, showLetter: true, showHeading: true }
   },
     {
     id: 5,
@@ -61,7 +61,7 @@ let exerciseBlocks = [
             correctIndex: 2
         }
         ],
-        showLetter: true, numbered: true
+        showLetter: true, numbered: true, showHeading: true
     }
     },
 {
@@ -83,7 +83,8 @@ let exerciseBlocks = [
       { text: "oinks", pairIndex: 2 }
     ],
     numbered: true,
-    showLetter: true
+    showLetter: true,
+    showHeading: true
   }
 },
     {
@@ -110,7 +111,7 @@ let exerciseBlocks = [
             correctIndex: 3
         }
     ],
-        showLetter: true
+        showLetter: true, showHeading: true
     }
   },
     {
@@ -121,7 +122,8 @@ let exerciseBlocks = [
         text: "How do you feel about cats? Please write 50 words.\nDo you like to eat fried chicken? Why or why not?\nWhy is the sky blue?",
         showLetter: true,
         answerBoxType: "lined",
-        answerBoxSize: "paragraph"
+        answerBoxSize: "paragraph",
+        showHeading: true
     }
   }
 ];
@@ -197,6 +199,23 @@ function showMenu(el) {
 
 function closeMenu(el) {
     el.classList.add("hidden");
+}
+
+// Helper to wire heading checkbox to enable/disable heading textarea
+function setupHeadingToggle() {
+    const headingCheckbox = document.getElementById("headingCheckbox");
+    const headingTextarea = headingContainer.querySelector(".heading-input");
+
+    if (!headingCheckbox || !headingTextarea) return;
+
+    const applyState = () => {
+        const isChecked = headingCheckbox.checked;
+        headingTextarea.disabled = !isChecked;
+        headingTextarea.classList.toggle("disabled", !isChecked);
+    };
+
+    applyState();
+    headingCheckbox.addEventListener("change", applyState);
 }
 
 // Function to render the buttons for the exercise types when creating a new exercise 
@@ -315,9 +334,7 @@ function renderExerciseBlocks() {
         if (block.type === "essay-questions") {
             const generatedDiv = document.createElement("div");
 
-            let hasHeading = false;
-            if (block.data.heading) {
-                hasHeading = true;
+            if (block.data.showHeading && block.data.heading) {
                 const headingPar = document.createElement("p");
                 const baseHeading = block.data.heading || "";
                 headingPar.textContent = letter ? `${letter}. ${baseHeading}` : baseHeading;
@@ -405,9 +422,7 @@ function renderExerciseBlocks() {
             const generatedPhrases = document.createElement("div");
             generatedPhrases.classList.add("simulate-line-height");
 
-            let hasHeading = false;
-            if (block.data.heading) {
-                hasHeading = true;
+            if (block.data.showHeading && block.data.heading) {
                 const headingPar = document.createElement("p");
                 const baseHeading = block.data.heading || "";
                 headingPar.textContent = letter ? `${letter}. ${baseHeading}` : baseHeading;
@@ -507,9 +522,7 @@ function renderExerciseBlocks() {
         if (block.type === "scrambled-sentence") {
             const generatedSenContainer = document.createElement("div");
 
-            let hasHeading = false;
-            if (block.data.heading) {
-                hasHeading = true;
+            if (block.data.showHeading && block.data.heading) {
                 const headingPar = document.createElement("p");
                 const baseHeading = block.data.heading || "";
                 headingPar.textContent = letter ? `${letter}. ${baseHeading}` : baseHeading;
@@ -554,9 +567,7 @@ function renderExerciseBlocks() {
         if (block.type === "blanks-passage") {
             const generatedPassageContainer = document.createElement("div");
 
-            let hasHeading = false;
-            if (block.data.heading) {
-                hasHeading = true;
+            if (block.data.showHeading && block.data.heading) {
                 const headingPar = document.createElement("p");
                 const baseHeading = block.data.heading || "";
                 headingPar.textContent = letter ? `${letter}. ${baseHeading}` : baseHeading;
@@ -613,9 +624,7 @@ function renderExerciseBlocks() {
             const generatedMCQsContainer = document.createElement("div");
             generatedMCQsContainer.classList.add("simulate-line-height");
 
-            let hasHeading = false;
-            if (block.data.heading) {
-                hasHeading = true;
+            if (block.data.showHeading && block.data.heading) {
                 const headingPar = document.createElement("p");
                 const baseHeading = block.data.heading || "";
                 headingPar.textContent = letter ? `${letter}. ${baseHeading}` : baseHeading;
@@ -749,9 +758,7 @@ function renderExerciseBlocks() {
         if (block.type === "cloze-test")  {
             const generatedDiv = document.createElement("div");
 
-            let hasHeading = false;
-            if (block.data.heading) {
-                hasHeading = true;
+            if (block.data.showHeading && block.data.heading) {
                 const headingPar = document.createElement("p");
                 const baseHeading = block.data.heading || "";
                 headingPar.textContent = letter ? `${letter}. ${baseHeading}` : baseHeading;
@@ -942,6 +949,9 @@ function saveEdit() {
     const bodyValue = bodyTextarea.value;
     const headingValue = headingTextarea ? headingTextarea.value : "";
 
+    const showHeadingElement = document.getElementById("headingCheckbox");
+    const showHeadingValue = showHeadingElement ? showHeadingElement.checked : true;
+
     const numberedElement = editorBody.querySelector("#numberedCheckbox");
     const answerLinesElement = editorBody.querySelector("#answerLinesCheckbox");
 
@@ -991,7 +1001,8 @@ function saveEdit() {
                     scrambledLines: makeScrambledLines(bodyValue),
                     numbered: numberedValue,
                     showAnswerLines: answerLinesValue,
-                    showLetter: block.data.showLetter
+                    showLetter: block.data.showLetter,
+                    showHeading: showHeadingValue
                 };
             } else if (block.type === "blanks-passage") {
                 if (!bodyValue.match(/\[(.*?)\]/g)) {
@@ -1004,7 +1015,8 @@ function saveEdit() {
                     text: bodyValue,
                     showWordList: showWordListValue,
                     wordList: makeWordListFromPassage(bodyValue),
-                    showLetter: block.data.showLetter
+                    showLetter: block.data.showLetter,
+                    showHeading: showHeadingValue
                     };
             } else if (block.type === "multiple-choice-question") {
                 const isValid = validateMcqInput(bodyValue);
@@ -1029,7 +1041,8 @@ function saveEdit() {
                     text: bodyValue,
                     numbered: numberedValue,
                     showLetter: block.data.showLetter,
-                    questions: questions
+                    questions: questions,
+                    showHeading: showHeadingValue
                     };
             } else if (block.type === "word-matching") {
                 const isValid = validateMatchingInput(bodyValue);
@@ -1043,7 +1056,8 @@ function saveEdit() {
                 showLetter: block.data.showLetter,
                 numbered: numberedValue,
                 pairs,
-                rightOptions
+                rightOptions,
+                showHeading: showHeadingValue
             };
             } else if (block.type === "cloze-test") {
                 const isValid = validateClozeInput(bodyValue);
@@ -1067,7 +1081,8 @@ function saveEdit() {
                     heading: headingValue,
                     text: bodyValue,
                     showLetter: block.data.showLetter,
-                    questions: questions
+                    questions: questions,
+                    showHeading: showHeadingValue
                     };
             } else if (block.type === "essay-questions") {
                 block.data = {
@@ -1075,7 +1090,8 @@ function saveEdit() {
                     text: bodyValue,
                     showLetter: block.data.showLetter,
                     answerBoxType: answerBoxTypeValue,
-                    answerBoxSize: answerBoxSizeValue
+                    answerBoxSize: answerBoxSizeValue,
+                    showHeading: showHeadingValue
                 };
             } else {
                 block.data.text = bodyValue;
@@ -1095,7 +1111,8 @@ function saveEdit() {
                 showLetter: true,
                 includeName: includeNameValue,
                 includeClass: includeClassValue,
-                includeDate: includeDateValue
+                includeDate: includeDateValue,
+                showHeading: showHeadingValue
             };
         } else if (currentEditingType === "scrambled-sentence") {
             data = {
@@ -1104,7 +1121,8 @@ function saveEdit() {
                 scrambledLines: makeScrambledLines(bodyValue),
                 numbered: numberedValue,
                 showAnswerLines: answerLinesValue,
-                showLetter: true
+                showLetter: true,
+                showHeading: showHeadingValue
             };
         } else if (currentEditingType === "blanks-passage") {
             data = {
@@ -1112,7 +1130,8 @@ function saveEdit() {
                 text: bodyValue,
                 showWordList: showWordListValue,
                 wordList: makeWordListFromPassage(bodyValue),
-                showLetter: true
+                showLetter: true,
+                showHeading: showHeadingValue
                 };
         } else if (currentEditingType === "multiple-choice-question") {
                 const questions = makeMcqQuestions(bodyValue);
@@ -1133,7 +1152,8 @@ function saveEdit() {
                 text: bodyValue,
                 numbered: numberedValue,
                 showLetter: true,
-                questions: questions
+                questions: questions,
+                showHeading: showHeadingValue
                 };
         } else if (currentEditingType === "word-matching") {
             const isValid = validateMatchingInput(bodyValue);
@@ -1147,7 +1167,8 @@ function saveEdit() {
                 showLetter: true,
                 numbered: numberedValue,
                 pairs,
-                rightOptions
+                rightOptions,
+                showHeading: showHeadingValue
             };
 
         } else if (currentEditingType === "cloze-test") {
@@ -1172,7 +1193,8 @@ function saveEdit() {
                 heading: headingValue,
                 text: bodyValue,
                 showLetter: true,
-                questions
+                questions,
+                showHeading: showHeadingValue
             };
     
         } else if (currentEditingType === "essay-questions") {
@@ -1181,7 +1203,8 @@ function saveEdit() {
                 text: bodyValue,
                 showLetter: true,
                 answerBoxType: answerBoxTypeValue,
-                answerBoxSize: answerBoxSizeValue
+                answerBoxSize: answerBoxSizeValue,
+                showHeading: showHeadingValue
             };
         } else {
             data = {
@@ -1325,11 +1348,14 @@ function createInstructionText(initialText = "") {
     editorBody.innerHTML = `<textarea class="text-box">${initialText}</textarea>`;
 }
 
-function createScrambledSentences(data = { heading: "", text: "" }) {
+function createScrambledSentences(data = { heading: "Unscramble the following sentences.", text: "" }) {
+    const headingChecked = data.showHeading !== false ? "checked" : "";
     headingContainer.innerHTML = `
-        <label for="scramble-heading" class="label-top">Instruction (Optional):</label>
-        <textarea id="scramble-heading" class="heading-input" placeholder="Unscramble the following sentences.">${data.heading || ""}</textarea> 
+        <label for="scramble-heading" class="label-top">Instruction</label>
+        <textarea id="scramble-heading" class="heading-input">${data.heading || ""}</textarea>
+        <label for="headingCheckbox">Include Instruction: </label><input type="checkbox" id="headingCheckbox" ${headingChecked}>
     `;
+    setupHeadingToggle();
 
     exerciseDescription.textContent = "Please type the sentences you wish to use in the text area. Put each sentence on a new line.";
 
@@ -1358,11 +1384,14 @@ function makeScrambledLines(text) {
     return scrambledLines;
 }
 
-function createBlanksPassage(data = { heading: "", text: "" }) {
+function createBlanksPassage(data = { heading: "Please fill in the blanks with appropriate words.", text: "" }) {
+    const headingChecked = data.showHeading !== false ? "checked" : "";
     headingContainer.innerHTML = `
-        <label for="scramble-heading" class="label-top">Instruction (Optional):</label>
-        <textarea id="scramble-heading" class="heading-input" placeholder="Please fill in the blanks with appropriate words.">${data.heading || ""}</textarea> 
-    `;
+        <label for="scramble-heading" class="label-top">Instruction</label>
+        <textarea id="scramble-heading" class="heading-input">${data.heading || ""}</textarea> 
+        <label for="headingCheckbox">Include Instruction: </label><input type="checkbox" id="headingCheckbox" ${headingChecked}>
+        `;
+    setupHeadingToggle();
 
     exerciseDescription.textContent = "Please type your passage in the text area. Include [square brackets] around the words you'd like to remove.";
 
@@ -1391,11 +1420,14 @@ function makeWordListFromPassage(text) {
     return shuffled;
 }
 
-function createWordMatching(data = { heading: "", text: "" }) {
+function createWordMatching(data = { heading: "Match words to create phrases.", text: "" }) {
+    const headingChecked = data.showHeading !== false ? "checked" : "";
     headingContainer.innerHTML = `
-        <label for="create-matching-heading" class="label-top">Instruction (Optional):</label>
-        <textarea id="create-matching-heading" class="heading-input" placeholder="Match words to create phrases.">${data.heading || ""}</textarea> 
+        <label for="create-matching-heading" class="label-top">Instruction</label>
+        <textarea id="create-matching-heading" class="heading-input">${data.heading || ""}</textarea> 
+        <label for="headingCheckbox">Include Instruction: </label><input type="checkbox" id="headingCheckbox" ${headingChecked}>
     `;
+    setupHeadingToggle();
 
     exerciseDescription.textContent = "Please type the phrases you want split with slashes. Add any additional phrases on a new line.";
 
@@ -1408,11 +1440,14 @@ function createWordMatching(data = { heading: "", text: "" }) {
         </div>
     `;
 }
-function createClozeTest(data = { heading: "", text: ""}) {
+function createClozeTest(data = { heading: "Read the passage and choose the correct answers.", text: ""}) {
+    const headingChecked = data.showHeading !== false ? "checked" : "";
     headingContainer.innerHTML = `
-        <label for="create-cloze-test-heading" class-"label-top">Instruction (Optional):</label>
-        <textarea id="create-cloze-test-heading" class="heading-input" placeholder="Read the passage and choose the correct answers.">${data.heading || ""}</textarea>
+        <label for="create-cloze-test-heading" class-"label-top">Instruction</label>
+        <textarea id="create-cloze-test-heading" class="heading-input">${data.heading || ""}</textarea>
+        <label for="headingCheckbox">Include Instruction: </label><input type="checkbox" id="headingCheckbox" ${headingChecked}>
     `;
+    setupHeadingToggle();
 
     exerciseDescription.textContent = "Please type the passage you wish to use in the text area. Enclose each word you want removed in [square/brackets/separated/by/slashes/for/each/possible/choice]. The first option must be the correct answer.  Use a maximum of four possible choices."
 
@@ -1548,11 +1583,14 @@ function createScrambledWords() {
 
 }
 
-function createEssayQuestion(data = { heading: "", text: "" }) {
+function createEssayQuestion(data = { heading: "Please answer in complete sentences.", text: "" }) {
+    const headingChecked = data.showHeading !== false ? "checked" : "";
     headingContainer.innerHTML = `
-        <label for="create-essay-question-heading" class="label-top">Instruction (Optional):</label>
-        <textarea id="create-essay-question-heading" class="heading-input" placeholder="Please answer in complete sentences.">${data.heading || ""}</textarea>
+        <label for="create-essay-question-heading" class="label-top">Instruction</label>
+        <textarea id="create-essay-question-heading" class="heading-input">${data.heading || ""}</textarea>
+        <label for="headingCheckbox">Include Instruction: </label><input type="checkbox" id="headingCheckbox" ${headingChecked}>
     `;
+    setupHeadingToggle();
 
     exerciseDescription.textContent = "Please enter your essay questions in the text area. Put each question on a new line.";
 
@@ -1607,10 +1645,12 @@ function createEssayQuestion(data = { heading: "", text: "" }) {
     `;
 }
 
-function createMultipleChoiceQuestions(data = { heading: "", text: "" }) {
+function createMultipleChoiceQuestions(data = { heading: "Choose the correct answers.", text: "" }) {
+    const headingChecked = data.showHeading !== false ? "checked" : "";
     headingContainer.innerHTML = `
-        <label for="create-mcq-heading" class="label-top">Instruction (Optional):</label>
-        <textarea id="create-mcq-heading" class="heading-input" placeholder="Choose the correct answers.">${data.heading || ""}</textarea> 
+        <label for="create-mcq-heading" class="label-top">Instruction</label>
+        <textarea id="create-mcq-heading" class="heading-input">${data.heading || ""}</textarea> 
+        <label for="headingCheckbox">Include Instruction: </label><input type="checkbox" id="headingCheckbox" ${headingChecked}>
     `;
 
     exerciseDescription.textContent = "Please type the questions you wish to use in the text area, followed by a list of answers in [square/brackets/separated/by/slashes]. The first option must be the correct answer. Add any additional questions on a new line. Use a maximum of four possible answers.";
