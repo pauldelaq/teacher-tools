@@ -891,23 +891,23 @@ function createBlockWrapper(block) {
     toolbar.classList.add("block-toolbar");
 
     const editBtn = document.createElement("button");
-    editBtn.innerHTML = `<img src="assets/edit.svg">`;
+    editBtn.innerHTML = `<img src="./assets/edit.svg">`;
     editBtn.classList.add("toolbar-btns");
 
     const deleteBtn = document.createElement("button");
-    deleteBtn.innerHTML = `<img src="assets/remove.svg">`;
+    deleteBtn.innerHTML = `<img src="./assets/remove.svg">`;
     deleteBtn.classList.add("toolbar-btns");
 
     const upBtn = document.createElement("button");
-    upBtn.innerHTML = `<img src="assets/up.svg">`;
+    upBtn.innerHTML = `<img src="./assets/up.svg">`;
     upBtn.classList.add("toolbar-btns");
 
     const downBtn = document.createElement("button");
-    downBtn.innerHTML = `<img src="assets/down.svg">`;
+    downBtn.innerHTML = `<img src="./assets/down.svg">`;
     downBtn.classList.add("toolbar-btns");
 
     const letterBtn = document.createElement("button");
-    const letterIcon = block.data.showLetter ? "assets/abc-color.svg" : "assets/abc.svg";
+    const letterIcon = block.data.showLetter ? "/assets/abc-color.svg" : "/assets/abc.svg";
     letterBtn.innerHTML = `<img src="${letterIcon}">`;
     letterBtn.classList.add("toolbar-btns");
 
@@ -1313,10 +1313,10 @@ function setToolbarButtons() {
 function handleModeChange() {
     if (currentViewMode === "student") {
         currentViewMode = "teacher";
-        modeBtn.innerHTML = `<img src="assets/teacher.svg">`;
+        modeBtn.innerHTML = `<img src="./assets/teacher.svg">`;
     } else {
         currentViewMode = "student";
-        modeBtn.innerHTML = `<img src="assets/student.svg">`;
+        modeBtn.innerHTML = `<img src="./assets/student.svg">`;
     }
 
     renderExerciseBlocks();
