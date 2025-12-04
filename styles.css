@@ -396,3 +396,7 @@ td.spacer-row {
   border: none;
   height: 1em;
 }
+
+.preserve-spaces {
+  white-space: pre-wrap;
+}

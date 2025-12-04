@@ -125,6 +125,30 @@ let exerciseBlocks = [
         answerBoxSize: "paragraph",
         showHeading: true
     }
+  },
+  {
+    id: 9,
+    type: "letter-removal",
+    data: {
+        heading: "Please fill in the missing letters.",
+        text: "Cats are cute animals with four legs.\nDogs like to bark.",
+        questions: [
+            {
+                sentence: "Cats are cute animals with four legs.",
+                modifiedText: "C _ _ _  a _ _  c _ _ _  a _ _ _ _ _ s  w _ _ _  f _ _ _  l _ _ _."
+            },
+            {
+                sentence: "Dogs like to bark.",
+                modifiedText: "D _ _ _  l _ _ _  t _  b _ _ _."
+            }
+        ],
+        showLetter: true,
+        numbered: true,
+        showHeading: true,
+        preserveInitial: true,
+        preserveFinal: false,
+        preserveRandom: false
+    }
   }
 ];
 
@@ -188,6 +212,12 @@ const exerciseTypes = [
         buttonContent: `How do you feel about <span class="bold">cats</span>? Please write 50 words.<br><br><table class="essay-rows"><tr><td> </td></tr><tr><td> </td></tr><tr><td> </td></tr><tr><td> </td></tr></table>`,
         buttonCaption: "Long Answer / Essay Questions",
         buttonFunction: createEssayQuestion
+    },
+    {
+        id: "letter-removal",
+        buttonContent: "C _ _ _ &nbsp a _ _ &nbsp c _ _ _ &nbsp <br>a _ _ _ _ _ s &nbsp w _ _ _ &nbsp f _ _ _  <br>l _ _ _.<br><br>D _ _ _ &nbsp l _ _ _ &nbsp t _ &nbsp b _ _ _.",
+        buttonCaption: "Text with Letters Removed",
+        buttonFunction: createLetterRemoval
     }
 ]
 
@@ -869,6 +899,46 @@ function renderExerciseBlocks() {
             blockElement = generatedDiv;
         }
 
+        if (block.type === "letter-removal") {
+            const generatedDiv = document.createElement("div");
+
+            if (block.data.showHeading && block.data.heading) {
+                const headingPar = document.createElement("p");
+                const baseHeading = block.data.heading || "";
+                headingPar.textContent = letter ? `${letter}. ${baseHeading}` : baseHeading;
+                headingPar.classList.add("bold");
+                generatedDiv.appendChild(headingPar);
+            } else if (letter) {
+                const letterLine = document.createElement("p");
+                letterLine.textContent = `${letter}.`;
+                letterLine.classList.add("bold");
+                generatedDiv.appendChild(letterLine);
+            }
+
+            const modifiedSenText = document.createElement(block.data.numbered ? "ol" : "ul");
+            const questions = block.data.questions;
+
+
+            if (currentViewMode === "student") {
+                questions.forEach((question) => {
+                    const listItem = document.createElement("li");
+                    listItem.textContent = question.modifiedText;
+                    listItem.classList.add("preserve-spaces");
+                    modifiedSenText.appendChild(listItem);
+                });
+            } else {
+                questions.forEach((question) => {
+                    const listItem = document.createElement("li");
+                    listItem.textContent = question.sentence;
+                    listItem.classList.add("preserve-spaces");
+                    modifiedSenText.appendChild(listItem);
+                });
+            }
+
+            generatedDiv.appendChild(modifiedSenText);
+            blockElement = generatedDiv;
+        }
+
         if (blockElement) {
             contentContainer.appendChild(blockElement);
 
@@ -961,8 +1031,8 @@ function saveEdit() {
     const showWordListElement = editorBody.querySelector("#showWordListCheckbox");
     const showWordListValue = showWordListElement ? showWordListElement.checked : true;
 
+    // Title options
     const includeNameElement  = editorBody.querySelector("#includeNameCheckbox");
-
     const includeClassElement = editorBody.querySelector("#includeClassCheckbox");
     const includeDateElement  = editorBody.querySelector("#includeDateCheckbox");
 
@@ -976,6 +1046,8 @@ function saveEdit() {
 
     const answerBoxTypeValue = selectedTypeRadio ? selectedTypeRadio.value : "lined";
     const answerBoxSizeValue = selectedSizeRadio ? selectedSizeRadio.value : "paragraph";
+
+
 
     if (bodyValue === "") {
         alert("Please type your exercise into the text box.");
@@ -1093,6 +1165,32 @@ function saveEdit() {
                     answerBoxSize: answerBoxSizeValue,
                     showHeading: showHeadingValue
                 };
+            } else if (block.type === "letter-removal") {
+                const preserveInitialEl = editorBody.querySelector("#preserveInitialCheckbox");
+                const preserveFinalEl   = editorBody.querySelector("#preserveFinalCheckbox");
+                const preserveRandomEl  = editorBody.querySelector("#preserveRandomCheckbox");
+
+                const preserveInitialValue = preserveInitialEl ? preserveInitialEl.checked : false;
+                const preserveFinalValue   = preserveFinalEl   ? preserveFinalEl.checked   : false;
+                const preserveRandomValue  = preserveRandomEl  ? preserveRandomEl.checked  : false;
+
+                const questions = makeLetterRemovalQuestions(bodyValue, {
+                    preserveInitial: preserveInitialValue,
+                    preserveFinal:   preserveFinalValue,
+                    preserveRandom:  preserveRandomValue
+                });
+
+                block.data = {
+                    heading: headingValue,
+                    text: bodyValue,
+                    questions,
+                    showLetter: block.data.showLetter,
+                    showHeading: showHeadingValue,
+                    numbered: block.data.numbered ?? true,
+                    preserveInitial: preserveInitialValue,
+                    preserveFinal:   preserveFinalValue,
+                    preserveRandom:  preserveRandomValue
+                };
             } else {
                 block.data.text = bodyValue;
             }
@@ -1206,6 +1304,32 @@ function saveEdit() {
                 answerBoxSize: answerBoxSizeValue,
                 showHeading: showHeadingValue
             };
+        } else if (block.type === "letter-removal") {
+            const preserveInitialEl = editorBody.querySelector("#preserveInitialCheckbox");
+            const preserveFinalEl   = editorBody.querySelector("#preserveFinalCheckbox");
+            const preserveRandomEl  = editorBody.querySelector("#preserveRandomCheckbox");
+
+            const preserveInitialValue = preserveInitialEl ? preserveInitialEl.checked : false;
+            const preserveFinalValue   = preserveFinalEl   ? preserveFinalEl.checked   : false;
+            const preserveRandomValue  = preserveRandomEl  ? preserveRandomEl.checked  : false;
+
+            const questions = makeLetterRemovalQuestions(bodyValue, {
+                preserveInitial: preserveInitialValue,
+                preserveFinal:   preserveFinalValue,
+                preserveRandom:  preserveRandomValue
+            });
+
+            block.data = {
+                heading: headingValue,
+                text: bodyValue,
+                questions,
+                showLetter: block.data.showLetter,
+                showHeading: showHeadingValue,
+                numbered: block.data.numbered ?? true,
+                preserveInitial: preserveInitialValue,
+                preserveFinal:   preserveFinalValue,
+                preserveRandom:  preserveRandomValue
+            };
         } else {
             data = {
                 text: bodyValue,
@@ -1248,7 +1372,7 @@ function editExercise(blockId) {
 
     // call the type's editor-builder function with existing data
     // for simple text-based types (title, instruction) we pass block.data.text
-    if (block.type === "scrambled-sentence" || block.type === "blanks-passage" || block.type === "multiple-choice-question" || block.type === "word-matching" || block.type === "cloze-test" || block.type === "essay-questions") {
+    if (block.type === "scrambled-sentence" || block.type === "blanks-passage" || block.type === "multiple-choice-question" || block.type === "word-matching" || block.type === "cloze-test" || block.type === "essay-questions" || block.type === "letter-removal") {
         typeConfig.buttonFunction(block.data || {});
     } else if (block.type === "title") {
         typeConfig.buttonFunction(block.data || {});
@@ -1732,6 +1856,127 @@ function validateMcqInput(bodyValue) {
     }
 
     return true;
+}
+
+function createLetterRemoval(data = { heading: "Please fill in the missing letters.", text: "" }) {
+    const headingChecked = data.showHeading !== false ? "checked" : "";
+    headingContainer.innerHTML = `
+        <label for="create-letter-removal-heading" class="label-top">Instruction</label>
+        <textarea id="create-letter-removal-heading" class="heading-input">${data.heading || ""}</textarea> 
+        <label for="headingCheckbox">Include Instruction: </label><input type="checkbox" id="headingCheckbox" ${headingChecked}>
+    `;
+
+    exerciseDescription.textContent = "Please type the sentences you wish to use in the text area. Add any additional sentences on a new line.";
+
+    const numberedChecked = data.numbered ? "checked" : "";
+    const preserveInitialChecked = data.preserveInitial ? "checked" : "";
+    const preserveFinalChecked = data.preserveFinal ? "checked" : "";
+    const preserveRandomChecked = data.preserveRandom ? "checked" : "";
+
+    editorBody.innerHTML = `
+        <textarea class="text-box">${data.text || ""}</textarea>
+        <div class="checkboxGroup">
+            <label for="numberedCheckbox">Number answers: </label><input type="checkbox" id="numberedCheckbox" ${numberedChecked}>
+            <fieldset>
+                <legend>Letter removal options:</legend>
+
+                <div>
+                    <label for="preserveInitialCheckbox">Preserve Initial Letters: </label><input type="checkbox" id="preserveInitialCheckbox" ${preserveInitialChecked}>
+                </div>
+                <div>
+                    <label for="preserveFinalCheckbox">Preserve Final Letters: </label><input type="checkbox" id="preserveFinalCheckbox" ${preserveFinalChecked}>
+                </div>
+                <div>
+                    <label for="preserveRandomCheckbox">Preserve Random Letters: </label><input type="checkbox" id="preserveRandomCheckbox" ${preserveRandomChecked}>
+                </div>
+            </fieldset>
+        </div>
+    `;
+}
+
+function makeLetterRemovalQuestions(text, options = {}) {
+    const {
+        preserveInitial = true,
+        preserveFinal   = false,
+        preserveRandom  = false
+    } = options;
+
+    const questions = [];
+
+    const individualSentences = text
+        .split("\n")
+        .map(s => s.trim())
+        .filter(s => s !== "");
+
+    individualSentences.forEach((sentence) => {
+        const match = sentence.match(/^(.*?)([.!?])?$/);
+        const body = match[1] || sentence;
+        const punctuation = match[2] || "";
+
+        const words = body.split(" ");
+        const sentenceWithBlanks = words.map(word => {
+            if (!word.length) return "";
+
+            // decide which letter positions to keep
+            const keepIndices = [];
+
+            if (preserveInitial && word.length > 0) {
+                keepIndices.push(0);
+            }
+
+            if (preserveFinal && word.length > 1) {
+                keepIndices.push(word.length - 1);
+            }
+
+            if (preserveRandom && word.length > 2) {
+                const targetKeepCount = Math.round(word.length * 0.5);
+
+                const maxKeep = word.length - 1;
+                const finalTarget = Math.min(targetKeepCount, maxKeep);
+
+                while (keepIndices.length < finalTarget) {
+                    const randIndex = Math.floor(Math.random() * word.length);
+
+                    if (!keepIndices.includes(randIndex)) {
+                        keepIndices.push(randIndex);
+                    }
+                }
+            }
+
+            // build the gapped word
+            let result = "";
+            let previousWasBlank = false;
+
+            for (let i = 0; i < word.length; i++) {
+                const keep = keepIndices.includes(i);
+
+                if (keep) {
+                    // if the previous position was a blank, add a space before this letter
+                    if (previousWasBlank) {
+                        result += " " + word[i];
+                    } else {
+                        result += word[i];
+                    }
+                    previousWasBlank = false;
+                } else {
+                    // add a spaced blank and mark that we just added a blank
+                    result += " _";
+                    previousWasBlank = true;
+                }
+            }
+
+            return result;
+        });
+
+        const modifiedText = sentenceWithBlanks.join("  ") + punctuation;
+
+        questions.push({
+            sentence: sentence,
+            modifiedText: modifiedText
+        });
+    });
+
+    return questions;
 }
 
 // event listeners for hard-coded buttons
