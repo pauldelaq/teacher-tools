@@ -172,7 +172,30 @@ let exerciseBlocks = [
         underlineInitial: true,
         showAnswerLines: true
     }
-  }
+  },
+    {
+    id: 11,
+    type: "word-grid",
+    data: {
+        heading: "Conjugate the verbs in the present tense.",
+        rows: 3,
+        cols: 4,
+        headerRow: true,
+        headerCol: true,
+        cells: [
+        ["",       "I",    "You",   "He/She"],
+        ["be",     "am",   "are",    "is"],
+        ["eat",    "eat",  "eat",   "eats"]
+        ],
+        blanks: [
+        [ false, false, false, false ],
+        [ false, false,  true,  false  ],
+        [ false, true,  false,  true  ]
+        ],
+        showLetter: true,
+        showHeading: true
+    }
+    }
 ];
 
 const exerciseTypes = [
@@ -1007,6 +1030,64 @@ function renderExerciseBlocks() {
             blockElement = generatedSenContainer;
         }
 
+        if (block.type === "word-grid") {
+            const generatedDiv = document.createElement("div");
+
+            if (block.data.showHeading && block.data.heading) {
+                const headingPar = document.createElement("p");
+                const baseHeading = block.data.heading || "";
+                headingPar.textContent = letter ? `${letter}. ${baseHeading}` : baseHeading;
+                headingPar.classList.add("bold");
+                generatedDiv.appendChild(headingPar);
+            } else if (letter) {
+                const letterLine = document.createElement("p");
+                letterLine.textContent = `${letter}.`;
+                letterLine.classList.add("bold");
+                generatedDiv.appendChild(letterLine);
+            }
+
+            const generatedTable = document.createElement("table");
+            generatedTable.classList.add("word-grid-table");
+            const rows = block.data.rows;
+            const cols = block.data.cols;
+            const cells = block.data.cells || [];
+            const blanks = block.data.blanks || [];
+            const headerRow = block.data.headerRow;
+            const headerCol = block.data.headerCol;
+
+            for (let r = 0; r < block.data.rows; r++) {
+                const row = document.createElement("tr");
+
+                for (let c = 0; c < block.data.cols; c++) {
+                    const isHeader = 
+                    (block.data.headerRow && r === 0) ||
+                    (block.data.headerCol && c === 0);
+                
+                    const cell = document.createElement(isHeader ? "th" : "td");
+
+                    const cellText = cells[r] && cells[r][c] ? cells[r][c] : "";
+                    const isBlank = blanks[r] && blanks[r][c];
+
+                    if (currentViewMode === "student" && isBlank) {
+                        cell.textContent = "";
+                    } else {
+                        cell.textContent = cellText;
+                    }
+
+                    if (currentViewMode === "teacher" && isBlank && cellText) {
+                        cell.classList.add("italics");
+                    }
+                    
+                    row.appendChild(cell);
+                }
+
+                generatedTable.appendChild(row);
+            }
+
+            generatedDiv.appendChild(generatedTable);
+            blockElement = generatedDiv;
+        }
+
         if (blockElement) {
             contentContainer.appendChild(blockElement);
 
@@ -1117,7 +1198,7 @@ function saveEdit() {
 
 
 
-    if (bodyValue === "") {
+    if (bodyValue.trim() === "") {
         alert("Please type your exercise into the text box.");
         return;
     }
@@ -1799,8 +1880,153 @@ function validateMatchingInput(bodyValue) {
     return true;
 }
 
-function createWordGrid() {
+function createWordGrid(data = { heading: "Please fill in correct values in the table.", text: "", rows: 5, cols: 5, headerRow: true, headerCol: true }) {
+    const headingChecked = data.showHeading !== false ? "checked" : "";
+    headingContainer.innerHTML = `
+        <label for="scramble-heading" class="label-top">Instruction</label>
+        <textarea id="scramble-heading" class="heading-input">${data.heading || ""}</textarea>
+        <label for="headingCheckbox">Include Instruction: </label><input type="checkbox" id="headingCheckbox" ${headingChecked}>
+    `;
+    setupHeadingToggle();
 
+    exerciseDescription.textContent = "Please prepare your table with the interface below. Uncheck the values that you want removed in the exercise.";
+
+    const rows = data.rows || 5;
+    const cols = data.cols || 5;
+    const headerRowChecked = data.headerRow !== false ? "checked" : "";
+    const headerColChecked = data.headerCol ? "checked" : "";
+
+    editorBody.innerHTML = `
+        <div class="word-grid-editor">
+            <div class="word-grid-top-controls">
+                <label>Rows:
+                    <input type="number" id="wordGridRows" min="1" max="12" value="${rows}">
+                </label>
+                <label>Columns:
+                    <input type="number" id="wordGridCols" min="1" max="5" value="${cols}">
+                </label>
+            </div>
+            <br>
+            <div class="word-grid-layout">
+                <div class="word-grid-corner-spacer"></div>
+                <div class="word-grid-heading-col-toggle">
+                    <label>
+                        <input type="checkbox" id="wordGridHeaderCol" ${headerColChecked}>
+                        Heading column
+                    </label>
+                </div>
+                <div class="word-grid-heading-row-toggle">
+                    <label>
+                        <input type="checkbox" id="wordGridHeaderRow" ${headerRowChecked}>
+                        Heading row
+                    </label>
+                </div>
+                <div class="word-grid-table-wrapper">
+                    <table id="wordGridTable" class="word-grid-editor-table"></table>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const rowsInput = editorBody.querySelector("#wordGridRows");
+    const colsInput = editorBody.querySelector("#wordGridCols");
+    const tableEl   = editorBody.querySelector("#wordGridTable");
+
+    const initialCells  = data.cells  || null;
+    const initialBlanks = data.blanks || null;
+
+    buildWordGridEditorTable(tableEl, rows, cols, initialCells, initialBlanks);
+    updateWordGridHeadingStyles();
+
+    const headerRowCheckbox = editorBody.querySelector("#wordGridHeaderRow");
+    const headerColCheckbox = editorBody.querySelector("#wordGridHeaderCol");
+
+    headerRowCheckbox.addEventListener("change", updateWordGridHeadingStyles);
+    headerColCheckbox.addEventListener("change", updateWordGridHeadingStyles);
+
+    rowsInput.addEventListener("change", () => {
+        const newRows = Math.max(1, Math.min(12, Number(rowsInput.value) || 1));
+        const newCols = Math.max(1, Math.min(5,  Number(colsInput.value) || 1));
+        buildWordGridEditorTable(tableEl, newRows, newCols, null, null);
+        updateWordGridHeadingStyles();
+    });
+
+    colsInput.addEventListener("change", () => {
+        const newRows = Math.max(1, Math.min(12, Number(rowsInput.value) || 1));
+        const newCols = Math.max(1, Math.min(5,  Number(colsInput.value) || 1));
+        buildWordGridEditorTable(tableEl, newRows, newCols, null, null);
+        updateWordGridHeadingStyles();
+    });
+}
+
+function buildWordGridEditorTable(tableEl, rows, cols, existingCells, existingBlanks) {
+    tableEl.innerHTML = "";
+
+    for (let r = 0; r < rows; r++) {
+        const tr = document.createElement("tr");
+
+        for (let c = 0; c < cols; c++) {
+            const td = document.createElement("td");
+            td.classList.add("word-grid-editor-cell");
+            td.dataset.row = r;
+            td.dataset.col = c;
+
+            const input = document.createElement("input");
+            input.type = "text";
+            input.classList.add("word-grid-cell-input");
+
+            if (existingCells && existingCells[r] && typeof existingCells[r][c] !== "undefined") {
+                input.value = existingCells[r][c];
+            }
+
+            const blankToggle = document.createElement("input");
+            blankToggle.type = "checkbox";
+            blankToggle.classList.add("word-grid-blank-toggle");
+
+            if (existingBlanks && existingBlanks[r] && typeof existingBlanks[r][c] !== "undefined") {
+                blankToggle.checked = !!existingBlanks[r][c];
+            }
+
+            const checkboxWrapper = document.createElement("div");
+            checkboxWrapper.classList.add("word-grid-checkbox-wrapper");
+            checkboxWrapper.appendChild(blankToggle);
+
+            td.appendChild(input);
+            td.appendChild(checkboxWrapper);
+
+            tr.appendChild(td);
+        }
+
+        tableEl.appendChild(tr);
+    }
+}
+
+function updateWordGridHeadingStyles() {
+    const headerRowCheckbox = document.getElementById("wordGridHeaderRow");
+    const headerColCheckbox = document.getElementById("wordGridHeaderCol");
+    const tableEl = document.getElementById("wordGridTable");
+    if (!tableEl) return;
+
+    const markRow = headerRowCheckbox && headerRowCheckbox.checked;
+    const markCol = headerColCheckbox && headerColCheckbox.checked;
+
+    const cells = tableEl.querySelectorAll(".word-grid-editor-cell");
+
+    cells.forEach(td => {
+        const r = Number(td.dataset.row);
+        const c = Number(td.dataset.col);
+        const input = td.querySelector(".word-grid-cell-input");
+        if (!input) return;
+
+        const isHeadingRowCell = markRow && r === 0;
+        const isHeadingColCell = markCol && c === 0;
+
+        if (isHeadingRowCell || isHeadingColCell) {
+            input.classList.add("bold");
+        } else {
+            input.classList.remove("bold");
+        }
+    });
 }
 
 function createScrambledWords(data = { heading: "Please answer in complete sentences.", text: "" }) {
