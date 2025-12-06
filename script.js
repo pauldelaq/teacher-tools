@@ -149,6 +149,29 @@ let exerciseBlocks = [
         preserveFinal: false,
         preserveRandom: false
     }
+  },
+    {
+    id: 10,
+    type: "scrambled-words",
+    data: {
+        heading: "Please unscramble the words to make sentences.",
+        text: "Cats are cute animals.\nDogs like to bark.",
+        questions: [
+            {
+                sentence: "Cats are cute animals.",
+                modifiedText: `sta<span class="underlined">C</span> r<span class="underlined">a</span>e ut<span class="underlined">c</span>e ni<span class="underlined">a</span>lsma.`
+            },
+            {
+                sentence: "Dogs like to bark.",
+                modifiedText: `og<span class="underlined">D</span>s k<span class="underlined">l</span>ie o<span class="underlined">t</span> kar<span class="underlined">b</span>.`
+            }
+        ],
+        showLetter: true,
+        numbered: true,
+        showHeading: true,
+        underlineInitial: true,
+        showAnswerLines: true
+    }
   }
 ];
 
@@ -172,8 +195,8 @@ const exerciseTypes = [
         buttonFunction: createScrambledSentences
     },
         {
-        id: "scrambled-word",
-        buttonContent: `nosi<span class="underlined">d</span>ura<br>yek<span class="underlined">m</span>no`,
+        id: "scrambled-words",
+        buttonContent: `sta<span class="underlined">C</span> r<span class="underlined">a</span>e ut<span class="underlined">c</span>e ni<span class="underlined">a</span>lsma.<br><br>og<span class="underlined">D</span>s k<span class="underlined">l</span>ie o<span class="underlined">t</span> kar<span class="underlined">b</span>.`,
         buttonCaption: "Scrambled Words",
         buttonFunction: createScrambledWords
     },
@@ -939,6 +962,51 @@ function renderExerciseBlocks() {
             blockElement = generatedDiv;
         }
 
+        if (block.type === "scrambled-words") {
+            const generatedSenContainer = document.createElement("div");
+
+            if (block.data.showHeading && block.data.heading) {
+                const headingPar = document.createElement("p");
+                const baseHeading = block.data.heading || "";
+                headingPar.textContent = letter ? `${letter}. ${baseHeading}` : baseHeading;
+                headingPar.classList.add("bold");
+                generatedSenContainer.appendChild(headingPar);
+            } else if (letter) {
+                const letterLine = document.createElement("p");
+                letterLine.textContent = `${letter}.`;
+                letterLine.classList.add("bold");
+                generatedSenContainer.appendChild(letterLine);
+            }
+
+            const scrambledSenText = document.createElement(block.data.numbered ? "ol" : "ul");
+            if (currentViewMode === "student") {
+                const scrambledSource = block.data.questions;
+                scrambledSource.forEach((sen) => {
+                    generatedSen = document.createElement("li");
+                    generatedSen.innerHTML = sen.modifiedText;
+                    scrambledSenText.appendChild(generatedSen);
+                    if (block.data.showAnswerLines) {
+                        const answerLine = document.createElement("div");
+                        answerLine.innerHTML = "<br>________________________________________________________________";
+                        answerLine.classList.add("answer-line");
+                        generatedSen.appendChild(answerLine);
+                    }
+                });
+            } else {
+                const originalText = block.data.text;
+                const sentencesArray = originalText.split("\n");
+                sentencesArray.forEach((sen) => {
+                    generatedSen = document.createElement("li");
+                    generatedSen.textContent = sen;
+                    scrambledSenText.appendChild(generatedSen);
+                });
+            }
+
+            generatedSenContainer.appendChild(scrambledSenText);
+
+            blockElement = generatedSenContainer;
+        }
+
         if (blockElement) {
             contentContainer.appendChild(blockElement);
 
@@ -1191,6 +1259,22 @@ function saveEdit() {
                     preserveFinal:   preserveFinalValue,
                     preserveRandom:  preserveRandomValue
                 };
+            } else if (block.type === "scrambled-words") {
+                const underlineInitialEl = editorBody.querySelector("#underlineInitialCheckbox");
+                const underlineInitialValue = underlineInitialEl ? underlineInitialEl.checked : true;
+
+                const questions = makeScrambledWords(bodyValue, underlineInitialValue);
+
+                block.data = {
+                    heading: headingValue,
+                    text: bodyValue,
+                    questions,
+                    numbered: numberedValue,
+                    showAnswerLines: answerLinesValue,
+                    showLetter: block.data.showLetter,
+                    showHeading: showHeadingValue,
+                    underlineInitial: underlineInitialValue
+                };
             } else {
                 block.data.text = bodyValue;
             }
@@ -1304,7 +1388,7 @@ function saveEdit() {
                 answerBoxSize: answerBoxSizeValue,
                 showHeading: showHeadingValue
             };
-        } else if (block.type === "letter-removal") {
+        } else if (currentEditingType === "letter-removal") {
             const preserveInitialEl = editorBody.querySelector("#preserveInitialCheckbox");
             const preserveFinalEl   = editorBody.querySelector("#preserveFinalCheckbox");
             const preserveRandomEl  = editorBody.querySelector("#preserveRandomCheckbox");
@@ -1319,16 +1403,32 @@ function saveEdit() {
                 preserveRandom:  preserveRandomValue
             });
 
-            block.data = {
+            data = {
                 heading: headingValue,
                 text: bodyValue,
                 questions,
-                showLetter: block.data.showLetter,
+                showLetter: true,
                 showHeading: showHeadingValue,
-                numbered: block.data.numbered ?? true,
+                numbered: numberedValue,
                 preserveInitial: preserveInitialValue,
                 preserveFinal:   preserveFinalValue,
                 preserveRandom:  preserveRandomValue
+            };
+        } else if (currentEditingType === "scrambled-words") {
+            const underlineInitialEl = editorBody.querySelector("#underlineInitialCheckbox");
+            const underlineInitialValue = underlineInitialEl ? underlineInitialEl.checked : true;
+
+            const questions = makeScrambledWords(bodyValue, underlineInitialValue);
+
+            data = {
+                heading: headingValue,
+                text: bodyValue,
+                questions,
+                numbered: numberedValue,
+                showAnswerLines: answerLinesValue,
+                showLetter: true,
+                showHeading: showHeadingValue,
+                underlineInitial: underlineInitialValue
             };
         } else {
             data = {
@@ -1372,7 +1472,7 @@ function editExercise(blockId) {
 
     // call the type's editor-builder function with existing data
     // for simple text-based types (title, instruction) we pass block.data.text
-    if (block.type === "scrambled-sentence" || block.type === "blanks-passage" || block.type === "multiple-choice-question" || block.type === "word-matching" || block.type === "cloze-test" || block.type === "essay-questions" || block.type === "letter-removal") {
+    if (block.type === "scrambled-sentence" || block.type === "blanks-passage" || block.type === "multiple-choice-question" || block.type === "word-matching" || block.type === "cloze-test" || block.type === "essay-questions" || block.type === "letter-removal" || block.type === "scrambled-words") {
         typeConfig.buttonFunction(block.data || {});
     } else if (block.type === "title") {
         typeConfig.buttonFunction(block.data || {});
@@ -1703,8 +1803,71 @@ function createWordGrid() {
 
 }
 
-function createScrambledWords() {
+function createScrambledWords(data = { heading: "Please answer in complete sentences.", text: "" }) {
+    const headingChecked = data.showHeading !== false ? "checked" : "";
+    headingContainer.innerHTML = `
+        <label for="scramble-heading" class="label-top">Instruction</label>
+        <textarea id="scramble-heading" class="heading-input">${data.heading || ""}</textarea>
+        <label for="headingCheckbox">Include Instruction: </label><input type="checkbox" id="headingCheckbox" ${headingChecked}>
+    `;
+    setupHeadingToggle();
 
+    exerciseDescription.textContent = "Please type the sentences you wish to use in the text area. Put each sentence on a new line.";
+
+    const numberedChecked = data.numbered ? "checked" : "";
+    const answerChecked = data.showAnswerLines ? "checked" : "";
+    const underlineIntialChecked = data.underlineInitial ? "checked" : "";
+
+    editorBody.innerHTML = `
+        <textarea class="text-box">${data.text || ""}</textarea>
+        <div class="checkboxGroup">
+            <label for="numberedCheckbox">Number answers: </label><input type="checkbox" id="numberedCheckbox" ${numberedChecked}>
+            <label for="answerLinesCheckbox">Add answer lines: </label><input type="checkbox" id="answerLinesCheckbox" ${answerChecked}>
+            <label for="underlineInitialCheckbox">Underline Initial Letter: </label><input type="checkbox" id="underlineInitialCheckbox" ${underlineIntialChecked}>
+        </div>
+    `;
+}
+
+function makeScrambledWords(bodyValue, underlineInitial) {
+    const sentences = bodyValue.split("\n").map(s => s.trim()).filter(s => s !== "");
+    const questions = [];
+    let modifiedText = "";
+
+    sentences.forEach((sentence) => {
+        const match = sentence.match(/^(.*?)([.!?])?$/);
+        const body = match[1] || sentence;
+        const punctuation = match[2] || "";
+
+        const words = body.split(" ");
+        let scrambledWords = [];
+        words.forEach((word) => {
+            if (word === "") {
+                return;
+            }
+
+            const letters = word.split("");
+
+            if (underlineInitial && letters.length > 0) {
+                letters[0] = `<span class="underlined">${letters[0]}</span>`;
+            }
+
+            for (let i = letters.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [letters[i], letters[j]] = [letters[j], letters[i]]
+            }
+
+            const scrambledWord = letters.join("");
+            scrambledWords.push(scrambledWord);
+            modifiedText = scrambledWords.join(" ") + punctuation;
+        });
+
+        questions.push({
+            sentence,
+            modifiedText
+        })
+    });
+    
+    return questions;
 }
 
 function createEssayQuestion(data = { heading: "Please answer in complete sentences.", text: "" }) {
