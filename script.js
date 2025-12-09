@@ -1161,11 +1161,11 @@ function openEditorForType(caption, fn, typeId) {
 
 function saveEdit() {
     const bodyTextarea = editorBody.querySelector(".text-box");
-    if (!bodyTextarea) return;
+    const hasBodyTextarea = !!bodyTextarea;
+    const bodyValue = hasBodyTextarea ? bodyTextarea.value : "";
 
     const headingTextarea = headingContainer.querySelector(".heading-input");
 
-    const bodyValue = bodyTextarea.value;
     const headingValue = headingTextarea ? headingTextarea.value : "";
 
     const showHeadingElement = document.getElementById("headingCheckbox");
@@ -1196,9 +1196,14 @@ function saveEdit() {
     const answerBoxTypeValue = selectedTypeRadio ? selectedTypeRadio.value : "lined";
     const answerBoxSizeValue = selectedSizeRadio ? selectedSizeRadio.value : "paragraph";
 
+    // Most exercise types require something in the main textarea.
+    // The word-grid type doesn't use the main textarea, so skip this check for it.
+    const isWordGrid =
+        currentEditingType === "word-grid" ||
+        (currentEditingBlockId !== null &&
+         exerciseBlocks.find(b => b.id === currentEditingBlockId)?.type === "word-grid");
 
-
-    if (bodyValue.trim() === "") {
+    if (!isWordGrid && hasBodyTextarea && bodyValue.trim() === "") {
         alert("Please type your exercise into the text box.");
         return;
     }
@@ -1356,6 +1361,70 @@ function saveEdit() {
                     showHeading: showHeadingValue,
                     underlineInitial: underlineInitialValue
                 };
+            } else if (block.type === "word-grid") {
+                const rowsInput = editorBody.querySelector("#wordGridRows");
+                const colsInput = editorBody.querySelector("#wordGridCols");
+
+                const headerRowCheckbox = document.getElementById("wordGridHeaderRow");
+                const headerColCheckbox = document.getElementById("wordGridHeaderCol");
+
+                const headerRowValue =
+                    headerRowCheckbox ? headerRowCheckbox.checked : (block.data.headerRow ?? false);
+                const headerColValue =
+                    headerColCheckbox ? headerColCheckbox.checked : (block.data.headerCol ?? false);
+
+                // Per‑cell controls live inside .word-grid-editor; header checkboxes sit outside the grid.
+                const gridInputs = editorBody.querySelectorAll(".word-grid-editor input[type='text']");
+                const allCheckboxes = editorBody.querySelectorAll(".word-grid-editor input[type='checkbox']");
+                const gridCheckboxes = Array.from(allCheckboxes).filter(cb =>
+                    cb.id !== "wordGridHeaderRow" && cb.id !== "wordGridHeaderCol"
+                );
+
+                let rows = rowsInput ? Number(rowsInput.value) : NaN;
+                let cols = colsInput ? Number(colsInput.value) : NaN;
+
+                if (!rows || rows < 1) {
+                    rows = typeof block.data.rows === "number" && block.data.rows > 0 ? block.data.rows : 5;
+                }
+
+                if (!cols || cols < 1) cols = block.data?.cols ?? 1;
+                if (cols > 5) cols = 5;
+
+                const cells = Array.from({ length: rows }, () => Array(cols).fill(""));
+                const blanks = Array.from({ length: rows }, () => Array(cols).fill(false));
+
+                const inputArray = Array.from(gridInputs);
+                const checkboxArray = Array.from(gridCheckboxes);
+
+                // Map inputs and checkboxes row‑by‑row using DOM order
+                for (let r = 0; r < rows; r++) {
+                    for (let c = 0; c < cols; c++) {
+                        const idx = r * cols + c;
+
+                        const input = inputArray[idx];
+                        if (input) {
+                            cells[r][c] = input.value.trim();
+                        }
+
+                        const cb = checkboxArray[idx];
+                        if (cb) {
+                            // Checked means "blank this cell" in the exercise.
+                            blanks[r][c] = cb.checked;
+                        }
+                    }
+                }
+
+                block.data = {
+                    heading: headingValue,
+                    rows,
+                    cols,
+                    headerRow: headerRowValue,
+                    headerCol: headerColValue,
+                    cells,
+                    blanks,
+                    showLetter: block.data.showLetter,
+                    showHeading: showHeadingValue
+                };
             } else {
                 block.data.text = bodyValue;
             }
@@ -1511,6 +1580,70 @@ function saveEdit() {
                 showHeading: showHeadingValue,
                 underlineInitial: underlineInitialValue
             };
+        } else if (currentEditingType === "word-grid") {
+            const rowsInput = editorBody.querySelector("#wordGridRows");
+            const colsInput = editorBody.querySelector("#wordGridCols");
+
+            const headerRowCheckbox = document.getElementById("wordGridHeaderRow");
+            const headerColCheckbox = document.getElementById("wordGridHeaderCol");
+
+            const headerRowValue =
+                headerRowCheckbox ? headerRowCheckbox.checked : false;
+            const headerColValue =
+                headerColCheckbox ? headerColCheckbox.checked : false;
+
+            // Per‑cell controls live inside .word-grid-editor; header checkboxes sit outside the grid.
+            const gridInputs = editorBody.querySelectorAll(".word-grid-editor input[type='text']");
+            const allCheckboxes = editorBody.querySelectorAll(".word-grid-editor input[type='checkbox']");
+            const gridCheckboxes = Array.from(allCheckboxes).filter(cb =>
+                cb.id !== "wordGridHeaderRow" && cb.id !== "wordGridHeaderCol"
+            );
+
+            let rows = rowsInput ? Number(rowsInput.value) : NaN;
+            let cols = colsInput ? Number(colsInput.value) : NaN;
+
+            if (!rows || rows < 1) {
+                rows = 5;
+            }
+
+            if (!cols || cols < 1) cols = 1;
+            if (cols > 5) cols = 5;
+
+            const cells = Array.from({ length: rows }, () => Array(cols).fill(""));
+            const blanks = Array.from({ length: rows }, () => Array(cols).fill(false));
+
+            const inputArray = Array.from(gridInputs);
+            const checkboxArray = Array.from(gridCheckboxes);
+
+            // Map inputs and checkboxes row‑by‑row using DOM order
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const idx = r * cols + c;
+
+                    const input = inputArray[idx];
+                    if (input) {
+                        cells[r][c] = input.value.trim();
+                    }
+
+                    const cb = checkboxArray[idx];
+                    if (cb) {
+                        // Checked means "blank this cell" in the exercise.
+                        blanks[r][c] = cb.checked;
+                    }
+                }
+            }
+
+            data = {
+                heading: headingValue,
+                rows,
+                cols,
+                headerRow: headerRowValue,
+                headerCol: headerColValue,
+                cells,
+                blanks,
+                showLetter: true,
+                showHeading: showHeadingValue
+            };
         } else {
             data = {
                 text: bodyValue,
@@ -1535,31 +1668,30 @@ function editExercise(blockId) {
     const block = exerciseBlocks.find(b => b.id === blockId);
     if (!block) return;
 
-    // remember what type we are editing
     currentEditingType = block.type;
 
-    // find the type config from exerciseTypes
     const typeConfig = exerciseTypes.find(t => t.id === block.type);
     if (!typeConfig) return;
 
-    // open the editor interface
     showMenu(editingInterface);
 
     const caption = typeConfig.buttonCaption;
     exerciseType.textContent = `Edit ${caption}`;
 
-    // clear previous editor content
     editorBody.innerHTML = "";
 
-    // call the type's editor-builder function with existing data
-    // for simple text-based types (title, instruction) we pass block.data.text
-    if (block.type === "scrambled-sentence" || block.type === "blanks-passage" || block.type === "multiple-choice-question" || block.type === "word-matching" || block.type === "cloze-test" || block.type === "essay-questions" || block.type === "letter-removal" || block.type === "scrambled-words") {
-        typeConfig.buttonFunction(block.data || {});
-    } else if (block.type === "title") {
-        typeConfig.buttonFunction(block.data || {});
+    let editorArg;
+
+    const isTextOnly =
+        block.type === "instruction";
+
+    if (isTextOnly) {
+        editorArg = (block.data && block.data.text) ? block.data.text : "";
     } else {
-        typeConfig.buttonFunction(block.data && block.data.text ? block.data.text : "");
+        editorArg = block.data || {};
     }
+
+    typeConfig.buttonFunction(editorArg);
 
     hideToolbarButtons();
 }
@@ -1880,83 +2012,241 @@ function validateMatchingInput(bodyValue) {
     return true;
 }
 
-function createWordGrid(data = { heading: "Please fill in correct values in the table.", text: "", rows: 5, cols: 5, headerRow: true, headerCol: true }) {
+function createWordGrid(data = {
+    heading: "Conjugate the verbs in the present tense.",
+    rows: 3,
+    cols: 4,
+    headerRow: false,
+    headerCol: false,
+    cells: [],
+    blanks: [],
+    showHeading: true
+}) {
+    // --- Heading UI (same style as other types) ---
     const headingChecked = data.showHeading !== false ? "checked" : "";
     headingContainer.innerHTML = `
-        <label for="scramble-heading" class="label-top">Instruction</label>
-        <textarea id="scramble-heading" class="heading-input">${data.heading || ""}</textarea>
-        <label for="headingCheckbox">Include Instruction: </label><input type="checkbox" id="headingCheckbox" ${headingChecked}>
+        <label for="word-grid-heading" class="label-top">Instruction</label>
+        <textarea id="word-grid-heading" class="heading-input">${data.heading || ""}</textarea>
+        <label for="headingCheckbox">Include Instruction: </label>
+        <input type="checkbox" id="headingCheckbox" ${headingChecked}>
     `;
     setupHeadingToggle();
 
-    exerciseDescription.textContent = "Please prepare your table with the interface below. Uncheck the values that you want removed in the exercise.";
+    exerciseDescription.textContent =
+        "Type values into the grid. Check the boxes for cells that should become blanks in the exercise.";
 
-    const rows = data.rows || 5;
-    const cols = data.cols || 5;
-    const headerRowChecked = data.headerRow !== false ? "checked" : "";
+    // --- Size + heading row/col controls ---
+    const initialRows =
+        typeof data.rows === "number" && data.rows > 0 ? data.rows : 5;
+    const initialCols =
+        typeof data.cols === "number" && data.cols > 0 ? data.cols : 5;
+
+    const headerRowChecked = data.headerRow ? "checked" : "";
     const headerColChecked = data.headerCol ? "checked" : "";
 
     editorBody.innerHTML = `
-        <div class="word-grid-editor">
-            <div class="word-grid-top-controls">
+        <div class="word-grid-controls">
+            <div class="word-grid-size">
                 <label>Rows:
-                    <input type="number" id="wordGridRows" min="1" max="12" value="${rows}">
+                    <input id="wordGridRows" type="number" min="1" max="20" value="${initialRows}">
                 </label>
                 <label>Columns:
-                    <input type="number" id="wordGridCols" min="1" max="5" value="${cols}">
+                    <input id="wordGridCols" type="number" min="1" max="5" value="${initialCols}">
                 </label>
             </div>
-            <br>
-            <div class="word-grid-layout">
-                <div class="word-grid-corner-spacer"></div>
-                <div class="word-grid-heading-col-toggle">
-                    <label>
-                        <input type="checkbox" id="wordGridHeaderCol" ${headerColChecked}>
-                        Heading column
-                    </label>
-                </div>
-                <div class="word-grid-heading-row-toggle">
-                    <label>
-                        <input type="checkbox" id="wordGridHeaderRow" ${headerRowChecked}>
-                        Heading row
-                    </label>
-                </div>
-                <div class="word-grid-table-wrapper">
-                    <table id="wordGridTable" class="word-grid-editor-table"></table>
-                </div>
+            <div class="word-grid-heading-options">
+                <label><input type="checkbox" id="wordGridHeaderRow" ${headerRowChecked}> Heading Row</label>
+                <label><input type="checkbox" id="wordGridHeaderCol" ${headerColChecked}> Heading Column</label>
             </div>
         </div>
+        <div class="word-grid-editor"></div>
     `;
 
     const rowsInput = editorBody.querySelector("#wordGridRows");
     const colsInput = editorBody.querySelector("#wordGridCols");
-    const tableEl   = editorBody.querySelector("#wordGridTable");
-
-    const initialCells  = data.cells  || null;
-    const initialBlanks = data.blanks || null;
-
-    buildWordGridEditorTable(tableEl, rows, cols, initialCells, initialBlanks);
-    updateWordGridHeadingStyles();
-
+    const gridContainer = editorBody.querySelector(".word-grid-editor");
     const headerRowCheckbox = editorBody.querySelector("#wordGridHeaderRow");
     const headerColCheckbox = editorBody.querySelector("#wordGridHeaderCol");
 
-    headerRowCheckbox.addEventListener("change", updateWordGridHeadingStyles);
-    headerColCheckbox.addEventListener("change", updateWordGridHeadingStyles);
+    // --- In-memory model of the grid (what saveEdit ultimately reads from the DOM) ---
+    let currentRows = initialRows;
+    let currentCols = initialCols;
 
-    rowsInput.addEventListener("change", () => {
-        const newRows = Math.max(1, Math.min(12, Number(rowsInput.value) || 1));
-        const newCols = Math.max(1, Math.min(5,  Number(colsInput.value) || 1));
-        buildWordGridEditorTable(tableEl, newRows, newCols, null, null);
-        updateWordGridHeadingStyles();
-    });
+    // Seed from existing data if present, otherwise empty / false
+    let currentCells = Array.from({ length: currentRows }, (_, r) =>
+        Array.from({ length: currentCols }, (_, c) =>
+            (data.cells && data.cells[r] && typeof data.cells[r][c] === "string")
+                ? data.cells[r][c]
+                : ""
+        )
+    );
 
-    colsInput.addEventListener("change", () => {
-        const newRows = Math.max(1, Math.min(12, Number(rowsInput.value) || 1));
-        const newCols = Math.max(1, Math.min(5,  Number(colsInput.value) || 1));
-        buildWordGridEditorTable(tableEl, newRows, newCols, null, null);
-        updateWordGridHeadingStyles();
-    });
+    let currentBlanks = Array.from({ length: currentRows }, (_, r) =>
+        Array.from({ length: currentCols }, (_, c) =>
+            (data.blanks && data.blanks[r] && typeof data.blanks[r][c] === "boolean")
+                ? data.blanks[r][c]
+                : false
+        )
+    );
+
+    // --- Render the editor grid from currentCells/currentBlanks ---
+    function renderGrid() {
+        gridContainer.innerHTML = "";
+
+        for (let r = 0; r < currentRows; r++) {
+            const rowDiv = document.createElement("div");
+            rowDiv.classList.add("word-grid-editor-row");
+
+            for (let c = 0; c < currentCols; c++) {
+                const cellWrapper = document.createElement("div");
+                cellWrapper.classList.add("word-grid-editor-cell");
+
+                const cellInput = document.createElement("input");
+                cellInput.type = "text";
+                cellInput.value =
+                    currentCells[r] && typeof currentCells[r][c] === "string"
+                        ? currentCells[r][c]
+                        : "";
+
+                const blankLabel = document.createElement("label");
+                blankLabel.classList.add("word-grid-blank-label");
+
+                const blankCheckbox = document.createElement("input");
+                blankCheckbox.type = "checkbox";
+                blankCheckbox.classList.add("word-grid-cell-blank");
+                blankCheckbox.checked =
+                    currentBlanks[r] && typeof currentBlanks[r][c] === "boolean"
+                        ? currentBlanks[r][c]
+                        : false;
+
+                blankLabel.appendChild(blankCheckbox);
+                blankLabel.appendChild(document.createTextNode(" blank"));
+
+                cellWrapper.appendChild(cellInput);
+                cellWrapper.appendChild(blankLabel);
+
+                rowDiv.appendChild(cellWrapper);
+            }
+
+            gridContainer.appendChild(rowDiv);
+        }
+        applyEditorHeadingStyles();
+    }
+
+    function applyEditorHeadingStyles() {
+        const isHeaderRow = headerRowCheckbox && headerRowCheckbox.checked;
+        const isHeaderCol = headerColCheckbox && headerColCheckbox.checked;
+
+        const rowNodes = gridContainer.querySelectorAll(".word-grid-editor-row");
+
+        rowNodes.forEach((rowDiv, rIndex) => {
+            const cellInputs = rowDiv.querySelectorAll(".word-grid-editor-cell input[type='text']");
+            cellInputs.forEach((inputEl, cIndex) => {
+                const makeBold =
+                    (isHeaderRow && rIndex === 0) ||
+                    (isHeaderCol && cIndex === 0);
+
+                // "bold" already exists in your CSS; this will preview headings
+                inputEl.classList.toggle("bold", makeBold);
+            });
+        });
+    }
+
+    // --- Snapshot: pull current DOM values into currentCells/currentBlanks ---
+    function snapshotGrid() {
+        const inputNodes = gridContainer.querySelectorAll(
+            ".word-grid-editor-cell input[type='text']"
+        );
+        const checkboxNodes = gridContainer.querySelectorAll(
+            ".word-grid-editor-cell input[type='checkbox']"
+        );
+
+        const inputs = Array.from(inputNodes);
+        const checkboxes = Array.from(checkboxNodes);
+
+        const nextCells = Array.from({ length: currentRows }, () =>
+            Array(currentCols).fill("")
+        );
+        const nextBlanks = Array.from({ length: currentRows }, () =>
+            Array(currentCols).fill(false)
+        );
+
+        for (let r = 0; r < currentRows; r++) {
+            for (let c = 0; c < currentCols; c++) {
+                const idx = r * currentCols + c;
+
+                const input = inputs[idx];
+                if (input) {
+                    nextCells[r][c] = input.value;
+                }
+
+                const cb = checkboxes[idx];
+                if (cb) {
+                    nextBlanks[r][c] = cb.checked;
+                }
+            }
+        }
+
+        currentCells = nextCells;
+        currentBlanks = nextBlanks;
+    }
+
+    // --- Handle row/column changes without nuking everything ---
+    function handleResize() {
+        // 1. Snapshot what’s currently in the editor
+        snapshotGrid();
+
+        // 2. Parse new sizes
+        let newRows = parseInt(rowsInput.value, 10);
+        let newCols = parseInt(colsInput.value, 10);
+
+        if (!Number.isFinite(newRows) || newRows < 1) newRows = 1;
+        if (!Number.isFinite(newCols) || newCols < 1) newCols = 1;
+
+        if (newCols > 5) {
+            newCols = 5;
+            colsInput.value = "5"; // keep the UI in sync with the cap
+        }
+
+        // 3. Create new arrays and copy overlapping region
+        const resizedCells = Array.from({ length: newRows }, () =>
+            Array(newCols).fill("")
+        );
+        const resizedBlanks = Array.from({ length: newRows }, () =>
+            Array(newCols).fill(false)
+        );
+
+        const copyRows = Math.min(newRows, currentRows);
+        const copyCols = Math.min(newCols, currentCols);
+
+        for (let r = 0; r < copyRows; r++) {
+            for (let c = 0; c < copyCols; c++) {
+                resizedCells[r][c] = currentCells[r][c];
+                resizedBlanks[r][c] = currentBlanks[r][c];
+            }
+        }
+
+        // 4. Swap model & re-render
+        currentRows = newRows;
+        currentCols = newCols;
+        currentCells = resizedCells;
+        currentBlanks = resizedBlanks;
+
+        renderGrid();
+    }
+
+    rowsInput.addEventListener("change", handleResize);
+    colsInput.addEventListener("change", handleResize);
+
+    if (headerRowCheckbox) {
+        headerRowCheckbox.addEventListener("change", applyEditorHeadingStyles);
+    }
+    if (headerColCheckbox) {
+        headerColCheckbox.addEventListener("change", applyEditorHeadingStyles);
+    }
+
+    // Initial paint
+    renderGrid();
 }
 
 function buildWordGridEditorTable(tableEl, rows, cols, existingCells, existingBlanks) {
