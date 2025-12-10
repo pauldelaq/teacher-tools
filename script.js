@@ -1772,9 +1772,18 @@ function createTitleText(data = { text: "", includeName: true, includeClass: tru
     editorBody.innerHTML = `
         <textarea class="text-box">${data.text || ""}</textarea>
         <div class="checkboxGroup">
-            <label><input type="checkbox" id="includeNameCheckbox" ${nameChecked}> Include Name</label>
-            <label><input type="checkbox" id="includeClassCheckbox" ${classChecked}> Include Class</label>
-            <label><input type="checkbox" id="includeDateCheckbox" ${dateChecked}> Include Date</label>
+            <fieldset>
+                <legend>Title Options</legend>
+                    <div>
+                        <label><input type="checkbox" id="includeNameCheckbox" ${nameChecked}> Include Name Label</label>
+                    </div>
+                    <div>
+                        <label><input type="checkbox" id="includeClassCheckbox" ${classChecked}> Include Class Label</label>
+                    </div>
+                    <div>
+                        <label><input type="checkbox" id="includeDateCheckbox" ${dateChecked}> Include Date Label</label>
+                    </div>
+            </fieldset>
         </div>
     `;
 }
@@ -1788,9 +1797,9 @@ function createInstructionText(initialText = "") {
 function createScrambledSentences(data = { heading: "Unscramble the following sentences.", text: "" }) {
     const headingChecked = data.showHeading !== false ? "checked" : "";
     headingContainer.innerHTML = `
-        <label for="scramble-heading" class="label-top">Instruction</label>
+        <label for="scramble-heading" class="label-top">Instruction</label><br><br>
         <textarea id="scramble-heading" class="heading-input">${data.heading || ""}</textarea>
-        <label for="headingCheckbox">Include Instruction: </label><input type="checkbox" id="headingCheckbox" ${headingChecked}>
+        <input type="checkbox" id="headingCheckbox" ${headingChecked}><label for="headingCheckbox"> Include Instruction</label>
     `;
     setupHeadingToggle();
 
@@ -1802,8 +1811,15 @@ function createScrambledSentences(data = { heading: "Unscramble the following se
     editorBody.innerHTML = `
         <textarea class="text-box">${data.text || ""}</textarea>
         <div class="checkboxGroup">
-            <label for="numberedCheckbox">Number answers: </label><input type="checkbox" id="numberedCheckbox" ${numberedChecked}>
-            <label for="answerLinesCheckbox">Add answer lines: </label><input type="checkbox" id="answerLinesCheckbox" ${answerChecked}>
+            <fieldset>
+                <legend>Scrambling Options</legend>
+                <div>
+                    <input type="checkbox" id="numberedCheckbox" ${numberedChecked}><label for="numberedCheckbox"> Number answers</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="answerLinesCheckbox" ${answerChecked}><label for="answerLinesCheckbox"> Add answer lines</label>
+                </div>
+            </fieldset>
         </div>
     `;
 }
@@ -1824,9 +1840,9 @@ function makeScrambledLines(text) {
 function createBlanksPassage(data = { heading: "Please fill in the blanks with appropriate words.", text: "" }) {
     const headingChecked = data.showHeading !== false ? "checked" : "";
     headingContainer.innerHTML = `
-        <label for="scramble-heading" class="label-top">Instruction</label>
+        <label for="scramble-heading" class="label-top">Instruction</label><br><br>
         <textarea id="scramble-heading" class="heading-input">${data.heading || ""}</textarea> 
-        <label for="headingCheckbox">Include Instruction: </label><input type="checkbox" id="headingCheckbox" ${headingChecked}>
+       <input type="checkbox" id="headingCheckbox" ${headingChecked}><label for="headingCheckbox"> Include Instruction</label>
         `;
     setupHeadingToggle();
 
@@ -1837,7 +1853,7 @@ function createBlanksPassage(data = { heading: "Please fill in the blanks with a
     editorBody.innerHTML = `
         <textarea class="text-box">${data.text || ""}</textarea>
         <div class="checkboxGroup">
-            <label for="answerLinesCheckbox">Show word bank: </label><input type="checkbox" id="showWordListCheckbox" ${showWordListChecked}>
+            <input type="checkbox" id="showWordListCheckbox" ${showWordListChecked}><label for="answerLinesCheckbox"> Show word bank</label>
         </div>
     `;
 }
@@ -1860,9 +1876,9 @@ function makeWordListFromPassage(text) {
 function createWordMatching(data = { heading: "Match words to create phrases.", text: "" }) {
     const headingChecked = data.showHeading !== false ? "checked" : "";
     headingContainer.innerHTML = `
-        <label for="create-matching-heading" class="label-top">Instruction</label>
+        <label for="create-matching-heading" class="label-top">Instruction</label><br><br>
         <textarea id="create-matching-heading" class="heading-input">${data.heading || ""}</textarea> 
-        <label for="headingCheckbox">Include Instruction: </label><input type="checkbox" id="headingCheckbox" ${headingChecked}>
+        <input type="checkbox" id="headingCheckbox" ${headingChecked}><label for="headingCheckbox"> Include Instruction</label>
     `;
     setupHeadingToggle();
 
@@ -1873,16 +1889,16 @@ function createWordMatching(data = { heading: "Match words to create phrases.", 
     editorBody.innerHTML = `
         <textarea class="text-box">${data.text || ""}</textarea>
         <div class="checkboxGroup">
-            <label for="numberedCheckbox">Number answers: </label><input type="checkbox" id="numberedCheckbox" ${numberedChecked}>
+            <input type="checkbox" id="numberedCheckbox" ${numberedChecked}><label for="numberedCheckbox"> Number answers</label>
         </div>
     `;
 }
 function createClozeTest(data = { heading: "Read the passage and choose the correct answers.", text: ""}) {
     const headingChecked = data.showHeading !== false ? "checked" : "";
     headingContainer.innerHTML = `
-        <label for="create-cloze-test-heading" class-"label-top">Instruction</label>
+        <label for="create-cloze-test-heading" class="label-top">Instruction</label><br><br>
         <textarea id="create-cloze-test-heading" class="heading-input">${data.heading || ""}</textarea>
-        <label for="headingCheckbox">Include Instruction: </label><input type="checkbox" id="headingCheckbox" ${headingChecked}>
+        <input type="checkbox" id="headingCheckbox" ${headingChecked}><label for="headingCheckbox"> Include Instruction</label>
     `;
     setupHeadingToggle();
 
@@ -2025,10 +2041,10 @@ function createWordGrid(data = {
     // --- Heading UI (same style as other types) ---
     const headingChecked = data.showHeading !== false ? "checked" : "";
     headingContainer.innerHTML = `
-        <label for="word-grid-heading" class="label-top">Instruction</label>
+        <label for="word-grid-heading" class="label-top">Instruction</label><br><br>
         <textarea id="word-grid-heading" class="heading-input">${data.heading || ""}</textarea>
-        <label for="headingCheckbox">Include Instruction: </label>
-        <input type="checkbox" id="headingCheckbox" ${headingChecked}>
+        <input type="checkbox" id="headingCheckbox" ${headingChecked}><label for="headingCheckbox"> Include Instruction</label>
+        
     `;
     setupHeadingToggle();
 
@@ -2054,8 +2070,9 @@ function createWordGrid(data = {
                     <input id="wordGridCols" type="number" min="1" max="5" value="${initialCols}">
                 </label>
             </div>
+            <br>
             <div class="word-grid-heading-options">
-                <label><input type="checkbox" id="wordGridHeaderRow" ${headerRowChecked}> Heading Row</label>
+                <label><input type="checkbox" id="wordGridHeaderRow" ${headerRowChecked}> Heading Row</label><br><br>
                 <label><input type="checkbox" id="wordGridHeaderCol" ${headerColChecked}> Heading Column</label>
             </div>
         </div>
@@ -2120,7 +2137,7 @@ function createWordGrid(data = {
                         : false;
 
                 blankLabel.appendChild(blankCheckbox);
-                blankLabel.appendChild(document.createTextNode(" blank"));
+                blankLabel.appendChild(document.createTextNode(""));
 
                 cellWrapper.appendChild(cellInput);
                 cellWrapper.appendChild(blankLabel);
@@ -2322,9 +2339,9 @@ function updateWordGridHeadingStyles() {
 function createScrambledWords(data = { heading: "Please answer in complete sentences.", text: "" }) {
     const headingChecked = data.showHeading !== false ? "checked" : "";
     headingContainer.innerHTML = `
-        <label for="scramble-heading" class="label-top">Instruction</label>
+        <label for="scramble-heading" class="label-top">Instruction</label><br><br>
         <textarea id="scramble-heading" class="heading-input">${data.heading || ""}</textarea>
-        <label for="headingCheckbox">Include Instruction: </label><input type="checkbox" id="headingCheckbox" ${headingChecked}>
+        <input type="checkbox" id="headingCheckbox" ${headingChecked}><label for="headingCheckbox"> Include Instruction</label>
     `;
     setupHeadingToggle();
 
@@ -2337,9 +2354,18 @@ function createScrambledWords(data = { heading: "Please answer in complete sente
     editorBody.innerHTML = `
         <textarea class="text-box">${data.text || ""}</textarea>
         <div class="checkboxGroup">
-            <label for="numberedCheckbox">Number answers: </label><input type="checkbox" id="numberedCheckbox" ${numberedChecked}>
-            <label for="answerLinesCheckbox">Add answer lines: </label><input type="checkbox" id="answerLinesCheckbox" ${answerChecked}>
-            <label for="underlineInitialCheckbox">Underline Initial Letter: </label><input type="checkbox" id="underlineInitialCheckbox" ${underlineIntialChecked}>
+            <fieldset>
+                <legend>Scrambling Options</legend>
+                <div>
+                    <input type="checkbox" id="numberedCheckbox" ${numberedChecked}><label for="numberedCheckbox"> Number answers</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="answerLinesCheckbox" ${answerChecked}><label for="answerLinesCheckbox"> Add answer lines</label>
+                </div>
+                <div>
+                    <input type="checkbox" id="underlineInitialCheckbox" ${underlineIntialChecked}><label for="underlineInitialCheckbox"> Underline Initial Letter</label>
+                </div>
+            </fieldset>
         </div>
     `;
 }
@@ -2389,9 +2415,9 @@ function makeScrambledWords(bodyValue, underlineInitial) {
 function createEssayQuestion(data = { heading: "Please answer in complete sentences.", text: "" }) {
     const headingChecked = data.showHeading !== false ? "checked" : "";
     headingContainer.innerHTML = `
-        <label for="create-essay-question-heading" class="label-top">Instruction</label>
+        <label for="create-essay-question-heading" class="label-top">Instruction</label><br><br>
         <textarea id="create-essay-question-heading" class="heading-input">${data.heading || ""}</textarea>
-        <label for="headingCheckbox">Include Instruction: </label><input type="checkbox" id="headingCheckbox" ${headingChecked}>
+        <input type="checkbox" id="headingCheckbox" ${headingChecked}><label for="headingCheckbox"> Include Instruction</label>
     `;
     setupHeadingToggle();
 
@@ -2451,9 +2477,9 @@ function createEssayQuestion(data = { heading: "Please answer in complete senten
 function createMultipleChoiceQuestions(data = { heading: "Choose the correct answers.", text: "" }) {
     const headingChecked = data.showHeading !== false ? "checked" : "";
     headingContainer.innerHTML = `
-        <label for="create-mcq-heading" class="label-top">Instruction</label>
+        <label for="create-mcq-heading" class="label-top">Instruction</label><br><br>
         <textarea id="create-mcq-heading" class="heading-input">${data.heading || ""}</textarea> 
-        <label for="headingCheckbox">Include Instruction: </label><input type="checkbox" id="headingCheckbox" ${headingChecked}>
+        <input type="checkbox" id="headingCheckbox" ${headingChecked}><label for="headingCheckbox"> Include Instruction</label>
     `;
 
     exerciseDescription.textContent = "Please type the questions you wish to use in the text area, followed by a list of answers in [square/brackets/separated/by/slashes]. The first option must be the correct answer. Add any additional questions on a new line. Use a maximum of four possible answers.";
@@ -2463,7 +2489,7 @@ function createMultipleChoiceQuestions(data = { heading: "Choose the correct ans
     editorBody.innerHTML = `
         <textarea class="text-box">${data.text || ""}</textarea>
         <div class="checkboxGroup">
-            <label for="numberedCheckbox">Number answers: </label><input type="checkbox" id="numberedCheckbox" ${numberedChecked}>
+            <input type="checkbox" id="numberedCheckbox" ${numberedChecked}><label for="numberedCheckbox"> Number answers</label>
         </div>
     `;
 }
@@ -2540,9 +2566,9 @@ function validateMcqInput(bodyValue) {
 function createLetterRemoval(data = { heading: "Please fill in the missing letters.", text: "" }) {
     const headingChecked = data.showHeading !== false ? "checked" : "";
     headingContainer.innerHTML = `
-        <label for="create-letter-removal-heading" class="label-top">Instruction</label>
+        <label for="create-letter-removal-heading" class="label-top">Instruction</label><br><br>
         <textarea id="create-letter-removal-heading" class="heading-input">${data.heading || ""}</textarea> 
-        <label for="headingCheckbox">Include Instruction: </label><input type="checkbox" id="headingCheckbox" ${headingChecked}>
+        <input type="checkbox" id="headingCheckbox" ${headingChecked}><label for="headingCheckbox"> Include Instruction</label>
     `;
 
     exerciseDescription.textContent = "Please type the sentences you wish to use in the text area. Add any additional sentences on a new line.";
@@ -2555,18 +2581,18 @@ function createLetterRemoval(data = { heading: "Please fill in the missing lette
     editorBody.innerHTML = `
         <textarea class="text-box">${data.text || ""}</textarea>
         <div class="checkboxGroup">
-            <label for="numberedCheckbox">Number answers: </label><input type="checkbox" id="numberedCheckbox" ${numberedChecked}>
+            <input type="checkbox" id="numberedCheckbox" ${numberedChecked}><label for="numberedCheckbox"> Number answers</label><br><br>
             <fieldset>
                 <legend>Letter removal options:</legend>
 
                 <div>
-                    <label for="preserveInitialCheckbox">Preserve Initial Letters: </label><input type="checkbox" id="preserveInitialCheckbox" ${preserveInitialChecked}>
+                    <input type="checkbox" id="preserveInitialCheckbox" ${preserveInitialChecked}><label for="preserveInitialCheckbox"> Preserve Initial Letters</label>
                 </div>
                 <div>
-                    <label for="preserveFinalCheckbox">Preserve Final Letters: </label><input type="checkbox" id="preserveFinalCheckbox" ${preserveFinalChecked}>
+                    <input type="checkbox" id="preserveFinalCheckbox" ${preserveFinalChecked}><label for="preserveFinalCheckbox"> Preserve Final Letters</label>
                 </div>
                 <div>
-                    <label for="preserveRandomCheckbox">Preserve Random Letters: </label><input type="checkbox" id="preserveRandomCheckbox" ${preserveRandomChecked}>
+                    <input type="checkbox" id="preserveRandomCheckbox" ${preserveRandomChecked}><label for="preserveRandomCheckbox"> Preserve Random Letters</label>
                 </div>
             </fieldset>
         </div>

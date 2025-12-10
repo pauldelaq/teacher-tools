@@ -53,7 +53,8 @@ display: flex;
 .word-grid-editor {
   display: table;
   border-collapse: collapse;
-  margin-top: 0.5em;
+  margin-top: 1em;
+  margin-bottom: 2em;
 }
 
 .word-grid-editor-row {
@@ -71,12 +72,14 @@ display: flex;
   width: 10em;
   height: 2.2em;
   font-size: inherit;
+  border: none;
 }
 
 .word-grid-blank-label {
   display: block;
   font-size: 0.85em;
   margin-top: 0.25em;
+  text-align: right;
 }
 
 /* Legacy names kept in case they're referenced elsewhere */
@@ -502,4 +505,12 @@ td.spacer-row {
 .word-grid-table th, .word-grid-table td {
     border: 1px solid black;
     width: 3em;
+}
+
+.editor-body {
+    padding-bottom: 2em;
+}
+
+.exercise-description {
+    padding-top: 1em;
 }
