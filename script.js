@@ -1126,7 +1126,7 @@ function createBlockWrapper(block) {
     downBtn.classList.add("toolbar-btns");
 
     const letterBtn = document.createElement("button");
-    const letterIcon = block.data.showLetter ? "/assets/abc-color.svg" : "/assets/abc.svg";
+    const letterIcon = block.data.showLetter ? "./assets/abc-color.svg" : "./assets/abc.svg";
     letterBtn.innerHTML = `<img src="${letterIcon}">`;
     letterBtn.classList.add("toolbar-btns");
 
