@@ -9,6 +9,7 @@
     <body>
         <header>
             <h1>Worksheet Master</h1>
+                <button id="hamburger-menu-button" class="top-menu-button hamburger-menu-button"><img src="./assets/menu.svg"></button>
             <div class="header-tools">
                 <button id="copy-button" class="top-menu-button"><img src="./assets/clipboard.svg"></button>
                 <button id="mode-button" class="top-menu-button"><img src="./assets/student.svg"></button>
@@ -34,6 +35,10 @@
                 <h1 id="add-first-exercise-text" class="hidden">Please press the "+" button to add a title or exercise.</h1>
                 <div id="worksheet"></div>
             </main>
+        </div>
+        <div id="hamburger-menu" class="hamburger-menu menu-overlay hidden">
+            <button id="new-worksheet-button">Create New Worksheet</button>
+            <button id="load-template-worksheet-button">Load Template Worksheet</button>
         </div>
         <script src="script.js"></script>
     </body>

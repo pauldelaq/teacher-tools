@@ -1,4 +1,8 @@
 const addExerciseBtn = document.getElementById("add-button");
+const hamburgerMenuBtn = document.getElementById("hamburger-menu-button");
+const hamburgerMenu = document.getElementById("hamburger-menu");
+const newWorksheetBtn = document.getElementById("new-worksheet-button");
+const loadTemplateWorksheetBtn = document.getElementById("load-template-worksheet-button");
 const createExerciseMenu = document.getElementById("create-exercise-menu");
 const exerciseListDisplay = document.getElementById("exercise-list-display");
 const closeExerciseMenuBtn = document.getElementById("close-exercise-menu");
@@ -16,7 +20,8 @@ const worksheet = document.getElementById("worksheet");
 let currentEditingBlockId = null;
 let currentEditingType = null;
 let currentViewMode = "student";
-let exerciseBlocks = [
+let exerciseBlocks = [];
+const sampleBlocks = [
  {
     id: 1,
     type: "title",
@@ -1659,6 +1664,7 @@ function saveEdit() {
     }
 
     renderExerciseBlocks();
+    persistWorksheet();
     alert("Saved");
 }
 
@@ -1699,6 +1705,7 @@ function editExercise(blockId) {
 function deleteExercise(blockId) {
     exerciseBlocks = exerciseBlocks.filter(block => block.id !== blockId);
     renderExerciseBlocks();
+    persistWorksheet();
 }
 
 function moveUp(blockId) {
@@ -1710,6 +1717,7 @@ function moveUp(blockId) {
     exerciseBlocks[index] = temp;
 
     renderExerciseBlocks();
+    persistWorksheet();
 }
 
 function moveDown(blockId) {
@@ -1721,6 +1729,7 @@ function moveDown(blockId) {
     exerciseBlocks[index] = temp;
 
     renderExerciseBlocks();
+    persistWorksheet();
 }
 
 function toggleLettering(blockId) {
@@ -1731,6 +1740,7 @@ function toggleLettering(blockId) {
     block.data.showLetter = !block.data.showLetter;
 
     renderExerciseBlocks();
+    persistWorksheet();
 }
 
 function hideToolbarButtons() {
@@ -1756,6 +1766,38 @@ function handleModeChange() {
         modeBtn.innerHTML = `<img src="./assets/student.svg">`;
     }
 
+    renderExerciseBlocks();
+    persistWorksheet();
+}
+
+function initWorksheet() {
+    const saved = localStorage.getItem("worksheetData");
+
+    if (saved) {
+        try {
+            exerciseBlocks = JSON.parse(saved);
+        } catch (e) {
+            console.warn("Exercise data has issues. Using template data.");
+            exerciseBlocks = structuredClone(sampleBlocks);
+        }
+    } else {
+        exerciseBlocks = structuredClone(sampleBlocks);
+    }
+
+    renderExerciseBlocks();
+    persistWorksheet();
+}
+
+function persistWorksheet() {
+    localStorage.setItem(
+        "worksheetData",
+        JSON.stringify(exerciseBlocks)
+    );
+}
+
+function loadTemplateWorksheet() {
+    exerciseBlocks = structuredClone(sampleBlocks);
+    persistWorksheet();
     renderExerciseBlocks();
 }
 
@@ -2734,9 +2776,40 @@ saveEditBtn.addEventListener("click", () => saveEdit());
 
 modeBtn.addEventListener("click", () => handleModeChange());
 
+let hamburgerMenuOpen = false;
+hamburgerMenuBtn.addEventListener("click", () => {
+    if (hamburgerMenuOpen) {
+        closeMenu(hamburgerMenu);
+        hamburgerMenuBtn.innerHTML = `<img src="./assets/menu.svg">`;
+        hamburgerMenuOpen = false;
+    } else {
+        showMenu(hamburgerMenu);
+        hamburgerMenuBtn.innerHTML = "X";
+        hamburgerMenuOpen = true;
+    }
+})
+
+newWorksheetBtn.addEventListener("click", () => {
+    localStorage.removeItem("worksheetData");
+    exerciseBlocks = [];
+    renderExerciseBlocks();
+
+    closeMenu(hamburgerMenu);
+    hamburgerMenuBtn.innerHTML = `<img src="./assets/menu.svg">`;
+    hamburgerMenuOpen = false;
+})
+
+loadTemplateWorksheetBtn.addEventListener("click", () => {
+    loadTemplateWorksheet();
+    closeMenu(hamburgerMenu);
+    hamburgerMenuBtn.innerHTML = `<img src="./assets/menu.svg">`;
+    hamburgerMenuOpen = false;
+}
+);
+
 // Stuff to happen upon page load
 
+initWorksheet();
 renderExerciseTypes();
-renderExerciseBlocks();
 
 // Stuff that should happen only after rendering main content
