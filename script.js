@@ -1812,7 +1812,7 @@ function createTitleText(data = { text: "", includeName: true, includeClass: tru
     const dateChecked  = data.includeDate !== false ? "checked" : "";
 
     editorBody.innerHTML = `
-        <textarea class="text-box">${data.text || ""}</textarea>
+        <textarea class="text-box" placeholder="Type title text here">${data.text || ""}</textarea>
         <div class="checkboxGroup">
             <fieldset>
                 <legend>Title Options</legend>
@@ -1833,7 +1833,7 @@ function createTitleText(data = { text: "", includeName: true, includeClass: tru
 function createInstructionText(initialText = "") {
     headingContainer.innerHTML = "";
     exerciseDescription.textContent = "Please type the text for your instruction/note in the text area.";
-    editorBody.innerHTML = `<textarea class="text-box">${initialText}</textarea>`;
+    editorBody.innerHTML = `<textarea class="text-box" placeholder="Type instruction/note text here">${initialText}</textarea>`;
 }
 
 function createScrambledSentences(data = { heading: "Unscramble the following sentences.", text: "" }) {
@@ -1851,7 +1851,7 @@ function createScrambledSentences(data = { heading: "Unscramble the following se
     const answerChecked = data.showAnswerLines ? "checked" : "";
 
     editorBody.innerHTML = `
-        <textarea class="text-box">${data.text || ""}</textarea>
+        <textarea class="text-box" placeholder="Here is the first sentence.\nHere is the second sentence.">${data.text || ""}</textarea>
         <div class="checkboxGroup">
             <fieldset>
                 <legend>Scrambling Options</legend>
@@ -1893,7 +1893,7 @@ function createBlanksPassage(data = { heading: "Please fill in the blanks with a
     const showWordListChecked = data.showWordList ? "checked" : "";
 
     editorBody.innerHTML = `
-        <textarea class="text-box">${data.text || ""}</textarea>
+        <textarea class="text-box" placeholder="In this passage, I want to remove [this] word and [that] word.">${data.text || ""}</textarea>
         <div class="checkboxGroup">
             <input type="checkbox" id="showWordListCheckbox" ${showWordListChecked}><label for="answerLinesCheckbox"> Show word bank</label>
         </div>
@@ -1929,12 +1929,14 @@ function createWordMatching(data = { heading: "Match words to create phrases.", 
     const numberedChecked = data.numbered ? "checked" : "";
 
     editorBody.innerHTML = `
-        <textarea class="text-box">${data.text || ""}</textarea>
+        <textarea class="text-box" placeholder=
+        "The dog / barks\nThe cat / meows\nThe pig / oinks\nThe wolf / howls">${data.text || ""}</textarea>
         <div class="checkboxGroup">
             <input type="checkbox" id="numberedCheckbox" ${numberedChecked}><label for="numberedCheckbox"> Number answers</label>
         </div>
     `;
 }
+
 function createClozeTest(data = { heading: "Read the passage and choose the correct answers.", text: ""}) {
     const headingChecked = data.showHeading !== false ? "checked" : "";
     headingContainer.innerHTML = `
@@ -1947,7 +1949,7 @@ function createClozeTest(data = { heading: "Read the passage and choose the corr
     exerciseDescription.textContent = "Please type the passage you wish to use in the text area. Enclose each word you want removed in [square/brackets/separated/by/slashes/for/each/possible/choice]. The first option must be the correct answer.  Use a maximum of four possible choices."
 
     editorBody.innerHTML = `
-        <textarea class="text-box">${data.text || ""}</textarea>
+        <textarea class="text-box" placeholder="Cats typically have [two/three/four/six] ears. They generally like to eat [fish/cabbage/onions/pickles]. In cartoons, they often drink [milk/cola/tea/beer], but this is not realistic. Typically, they simply drink [water/tea/cola/wine].">${data.text || ""}</textarea>
     `
 }
 
@@ -2394,7 +2396,7 @@ function createScrambledWords(data = { heading: "Please answer in complete sente
     const underlineIntialChecked = data.underlineInitial ? "checked" : "";
 
     editorBody.innerHTML = `
-        <textarea class="text-box">${data.text || ""}</textarea>
+        <textarea class="text-box" placeholder="This is the first sentence.\nThis is the second sentence.">${data.text || ""}</textarea>
         <div class="checkboxGroup">
             <fieldset>
                 <legend>Scrambling Options</legend>
@@ -2469,7 +2471,7 @@ function createEssayQuestion(data = { heading: "Please answer in complete senten
     const sizeValue = data.answerBoxSize || "paragraph";
 
     editorBody.innerHTML = `
-        <textarea class="text-box">${data.text || ""}</textarea>
+        <textarea class="text-box" placeholder="How do you feel about cats? Please write 50 words.\nDo you like to eat fried chicken? Why or why not?\nWhy is the sky blue?">${data.text || ""}</textarea>
         <div class="checkboxGroup">
             <fieldset>
                 <legend>Answer box type:</legend>
@@ -2529,7 +2531,7 @@ function createMultipleChoiceQuestions(data = { heading: "Choose the correct ans
     const numberedChecked = data.numbered ? "checked" : "";
 
     editorBody.innerHTML = `
-        <textarea class="text-box">${data.text || ""}</textarea>
+        <textarea class="text-box" placeholder="How many legs do cats typically have? [four/three/two/one]\nWhat sound do cats usually make? [meow/bark/moo]">${data.text || ""}</textarea>
         <div class="checkboxGroup">
             <input type="checkbox" id="numberedCheckbox" ${numberedChecked}><label for="numberedCheckbox"> Number answers</label>
         </div>
@@ -2621,7 +2623,7 @@ function createLetterRemoval(data = { heading: "Please fill in the missing lette
     const preserveRandomChecked = data.preserveRandom ? "checked" : "";
 
     editorBody.innerHTML = `
-        <textarea class="text-box">${data.text || ""}</textarea>
+        <textarea class="text-box" placeholder="This is the first sentence.\nThis is the second sentence.">${data.text || ""}</textarea>
         <div class="checkboxGroup">
             <input type="checkbox" id="numberedCheckbox" ${numberedChecked}><label for="numberedCheckbox"> Number answers</label><br><br>
             <fieldset>
