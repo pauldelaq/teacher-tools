@@ -1159,9 +1159,11 @@ function openEditorForType(caption, fn, typeId) {
 
     closeMenu(createExerciseMenu);
     showMenu(editingInterface);
+
     exerciseType.textContent = `Create ${caption}`;
     fn();
     hideToolbarButtons();
+    hamburgerMenuBtn.classList.add("hidden");
 }
 
 function saveEdit() {
@@ -1680,6 +1682,7 @@ function editExercise(blockId) {
     if (!typeConfig) return;
 
     showMenu(editingInterface);
+    hamburgerMenuBtn.classList.add("hidden");
 
     const caption = typeConfig.buttonCaption;
     exerciseType.textContent = `Edit ${caption}`;
@@ -1755,6 +1758,12 @@ function setToolbarButtons() {
     closeExerciseMenuBtn.classList.add("hidden");
     modeBtn.classList.remove("hidden");
     copyBtn.classList.remove("hidden");
+    hamburgerMenuBtn.classList.remove("hidden");
+    document.body.classList.remove("overlay-open");
+}
+
+function setOverlayOpen(isOpen) {
+    document.body.classList.toggle("overlay-open", !!isOpen);
 }
 
 function handleModeChange() {
@@ -2730,12 +2739,19 @@ function makeLetterRemovalQuestions(text, options = {}) {
 
 // event listeners for hard-coded buttons
 
+let exerciseMenuOpen = false;
 addExerciseBtn.addEventListener("click", () => {
     showMenu(createExerciseMenu);
-    addExerciseBtn.classList.toggle("hidden");
-    closeExerciseMenuBtn.classList.toggle("hidden");
-    modeBtn.classList.toggle("hidden");
-    copyBtn.classList.toggle("hidden");
+
+    // When the exercise menu is open, hide the main toolbar buttons and show the close button.
+    hideToolbarButtons();
+    closeExerciseMenuBtn.classList.remove("hidden");
+
+    // Keep the hamburger out of the way while the exercise picker is open.
+    hamburgerMenuBtn.classList.add("hidden");
+
+    setOverlayOpen(true);
+    exerciseMenuOpen = true;
 });
 
 copyBtn.addEventListener("click", () => {
@@ -2765,15 +2781,21 @@ copyBtn.addEventListener("click", () => {
 
 closeExerciseMenuBtn.addEventListener("click", () => {
     closeMenu(createExerciseMenu);
-    addExerciseBtn.classList.toggle("hidden");
-    closeExerciseMenuBtn.classList.toggle("hidden");
-    modeBtn.classList.toggle("hidden");
-    copyBtn.classList.toggle("hidden");
+
+    // Restore normal worksheet toolbar state.
+    closeExerciseMenuBtn.classList.add("hidden");
+    setToolbarButtons();
+
+    setOverlayOpen(false);
+    exerciseMenuOpen = false;
 });
+
 closeEditingInterface.addEventListener("click", () => {
     closeMenu(editingInterface);
     setToolbarButtons();
+    setOverlayOpen(false);
 });
+
 saveEditBtn.addEventListener("click", () => saveEdit());
 
 modeBtn.addEventListener("click", () => handleModeChange());
@@ -2783,10 +2805,34 @@ hamburgerMenuBtn.addEventListener("click", () => {
     if (hamburgerMenuOpen) {
         closeMenu(hamburgerMenu);
         hamburgerMenuBtn.innerHTML = `<img src="./assets/menu.svg">`;
+
+        // Restore whichever toolbar state is appropriate.
+        if (exerciseMenuOpen) {
+            // Exercise picker is still open; keep toolbar hidden but show its close button.
+            hideToolbarButtons();
+            closeExerciseMenuBtn.classList.remove("hidden");
+            hamburgerMenuBtn.classList.add("hidden");
+            setOverlayOpen(true);
+        } else {
+            setToolbarButtons();
+            setOverlayOpen(false);
+        }
+
         hamburgerMenuOpen = false;
     } else {
         showMenu(hamburgerMenu);
         hamburgerMenuBtn.innerHTML = "X";
+
+        // Hamburger open = hide main toolbar; only the hamburger button remains visible.
+        hideToolbarButtons();
+        hamburgerMenuBtn.classList.remove("hidden");
+
+        // If the exercise picker was open, temporarily hide its close button.
+        if (exerciseMenuOpen) {
+            closeExerciseMenuBtn.classList.add("hidden");
+        }
+
+        setOverlayOpen(true);
         hamburgerMenuOpen = true;
     }
 })
@@ -2797,6 +2843,9 @@ newWorksheetBtn.addEventListener("click", () => {
     renderExerciseBlocks();
 
     closeMenu(hamburgerMenu);
+    closeMenu(editingInterface);
+    setToolbarButtons();
+    setOverlayOpen(false);
     hamburgerMenuBtn.innerHTML = `<img src="./assets/menu.svg">`;
     hamburgerMenuOpen = false;
 })
@@ -2804,6 +2853,9 @@ newWorksheetBtn.addEventListener("click", () => {
 loadTemplateWorksheetBtn.addEventListener("click", () => {
     loadTemplateWorksheet();
     closeMenu(hamburgerMenu);
+    closeMenu(editingInterface);
+    setToolbarButtons();
+    setOverlayOpen(false);
     hamburgerMenuBtn.innerHTML = `<img src="./assets/menu.svg">`;
     hamburgerMenuOpen = false;
 }
