@@ -1103,54 +1103,193 @@ function renderExerciseBlocks() {
     })
 }
 
+// --- Toolbar visibility (JS-driven; desktop hover emulation + mobile tap) ---
+let toolbarGlobalDismissInit = false;
+
+function closeAllToolbars(exceptEl = null) {
+  document.querySelectorAll(".exercise-block").forEach(el => {
+    if (exceptEl && el === exceptEl) return;
+
+    el.classList.remove("toolbar-visible");
+
+    // Disable any toolbar buttons inside this block when closing
+    el.querySelectorAll(".block-toolbar .toolbar-btns").forEach(btn => {
+      btn.disabled = true;
+    });
+  });
+}
+
+function initToolbarGlobalDismiss() {
+  if (toolbarGlobalDismissInit) return;
+  toolbarGlobalDismissInit = true;
+
+  // Tap/click outside closes any open toolbar
+  document.addEventListener("pointerdown", (e) => {
+    if (!e.target.closest(".exercise-block")) closeAllToolbars();
+  }, true);
+
+  // Esc closes
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeAllToolbars();
+  });
+}
+
+function deviceCanHover() {
+  return window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+}
+
+function deviceIsTouchLike() {
+  return window.matchMedia("(hover: none), (pointer: coarse)").matches;
+}
+
 function createBlockWrapper(block) {
-    const wrapper = document.createElement("div");
-    wrapper.classList.add("exercise-block");
-    wrapper.dataset.blockId = block.id;
+  const wrapper = document.createElement("div");
+  wrapper.classList.add("exercise-block");
+  wrapper.dataset.blockId = block.id;
 
-    const contentContainer = document.createElement("div");
-    contentContainer.classList.add("block-content");
+  const contentContainer = document.createElement("div");
+  contentContainer.classList.add("block-content");
 
-    const toolbar = document.createElement("div");
-    toolbar.classList.add("block-toolbar");
+  const toolbar = document.createElement("div");
+  toolbar.classList.add("block-toolbar");
 
-    const editBtn = document.createElement("button");
-    editBtn.innerHTML = `<img src="./assets/edit.svg">`;
-    editBtn.classList.add("toolbar-btns");
+  const editBtn = document.createElement("button");
+  editBtn.innerHTML = `<img src="./assets/edit.svg">`;
+  editBtn.classList.add("toolbar-btns");
 
-    const deleteBtn = document.createElement("button");
-    deleteBtn.innerHTML = `<img src="./assets/remove.svg">`;
-    deleteBtn.classList.add("toolbar-btns");
+  const deleteBtn = document.createElement("button");
+  deleteBtn.innerHTML = `<img src="./assets/remove.svg">`;
+  deleteBtn.classList.add("toolbar-btns");
 
-    const upBtn = document.createElement("button");
-    upBtn.innerHTML = `<img src="./assets/up.svg">`;
-    upBtn.classList.add("toolbar-btns");
+  const upBtn = document.createElement("button");
+  upBtn.innerHTML = `<img src="./assets/up.svg">`;
+  upBtn.classList.add("toolbar-btns");
 
-    const downBtn = document.createElement("button");
-    downBtn.innerHTML = `<img src="./assets/down.svg">`;
-    downBtn.classList.add("toolbar-btns");
+  const downBtn = document.createElement("button");
+  downBtn.innerHTML = `<img src="./assets/down.svg">`;
+  downBtn.classList.add("toolbar-btns");
 
-    const letterBtn = document.createElement("button");
-    const letterIcon = block.data.showLetter ? "./assets/abc-color.svg" : "./assets/abc.svg";
-    letterBtn.innerHTML = `<img src="${letterIcon}">`;
-    letterBtn.classList.add("toolbar-btns");
+  const letterBtn = document.createElement("button");
+  const letterIcon = block.data.showLetter ? "./assets/abc-color.svg" : "./assets/abc.svg";
+  letterBtn.innerHTML = `<img src="${letterIcon}">`;
+  letterBtn.classList.add("toolbar-btns");
 
-    editBtn.addEventListener("click", () => editExercise(block.id));
-    deleteBtn.addEventListener("click", () => deleteExercise(block.id));
-    upBtn.addEventListener("click", () => moveUp(block.id));
-    downBtn.addEventListener("click", () => moveDown(block.id));
-    letterBtn.addEventListener("click", () => toggleLettering(block.id));
+  const btns = [editBtn, deleteBtn, upBtn, downBtn, letterBtn];
 
-    toolbar.appendChild(editBtn);
-    toolbar.appendChild(deleteBtn);
-    toolbar.appendChild(upBtn);
-    toolbar.appendChild(downBtn);
-    toolbar.appendChild(letterBtn);
+  // --- JS-driven visibility rules ---
+  const setToolbarVisible = (visible) => {
+    wrapper.classList.toggle("toolbar-visible", !!visible);
 
-    wrapper.appendChild(toolbar);
-    wrapper.appendChild(contentContainer);
+    // HARD GUARANTEE: if toolbar isn't visible, buttons are disabled.
+    // This prevents any "invisible but clickable" bugs regardless of CSS.
+    btns.forEach(b => {
+      b.disabled = !visible;
+    });
+  };
 
-    return { editBtn, deleteBtn, upBtn, downBtn, letterBtn, contentContainer, wrapper }
+  // Start hidden/disabled
+  setToolbarVisible(false);
+
+  const showToolbar = () => {
+    closeAllToolbars(wrapper);
+    setToolbarVisible(true);
+  };
+
+  const hideToolbar = () => {
+    setToolbarVisible(false);
+  };
+
+  // Desktop: show on real mouse hover.
+  // We DO NOT rely on matchMedia() here because it can be inconsistent across browsers.
+  wrapper.addEventListener("pointerenter", (e) => {
+    if (e.pointerType !== "mouse") return;
+    showToolbar();
+  });
+
+  wrapper.addEventListener("pointerleave", (e) => {
+    if (e.pointerType !== "mouse") return;
+    hideToolbar();
+  });
+
+  // Keyboard accessibility: show when focus is inside the block (desktop only).
+  // On touch, focus behavior can fire during taps and cause the toolbar to open unexpectedly.
+  wrapper.addEventListener("focusin", () => {
+    if (deviceIsTouchLike()) return;
+    showToolbar();
+  });
+  wrapper.addEventListener("focusout", (e) => {
+    if (deviceIsTouchLike()) return;
+    const next = e.relatedTarget;
+    if (!next || !wrapper.contains(next)) hideToolbar();
+  });
+
+  // Mobile/touch: tap toggles the toolbar.
+  // Capture + preventDefault ensures the tap that opens it can't also click a button.
+  wrapper.addEventListener("pointerdown", (e) => {
+    if (!deviceIsTouchLike()) return;
+
+    // If tapping on a toolbar button, let the button handle it.
+    if (e.target.closest(".block-toolbar")) return;
+
+    // Prevent the tap from becoming an immediate click on a toolbar button
+    // that appears under the finger after we open.
+    e.preventDefault();
+    e.stopPropagation();
+
+    const wasOpen = wrapper.classList.contains("toolbar-visible");
+    closeAllToolbars(wrapper);
+
+    if (!wasOpen) {
+      // Opening: show highlight/toolbar, but suppress the very next toolbar click.
+      wrapper.dataset.suppressNextToolbarClick = "1";
+      setToolbarVisible(true);
+      // Remove suppression shortly after; long enough to cover the synthetic click.
+      setTimeout(() => {
+        delete wrapper.dataset.suppressNextToolbarClick;
+      }, 450);
+    } else {
+      // Closing
+      setToolbarVisible(false);
+    }
+  }, true);
+
+  // If we just opened the toolbar from a tap, cancel the next toolbar click.
+  // This prevents the first tap (intended to "activate" the block) from also
+  // triggering a button that appears under the finger.
+  wrapper.addEventListener("click", (e) => {
+    if (!deviceIsTouchLike()) return;
+    if (wrapper.dataset.suppressNextToolbarClick !== "1") return;
+    if (!e.target.closest(".block-toolbar")) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+  }, true);
+
+  // --- Button actions (also close toolbar) ---
+  const closeAfter = (fn) => (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    hideToolbar();
+    fn();
+  };
+
+  editBtn.addEventListener("click", closeAfter(() => editExercise(block.id)));
+  deleteBtn.addEventListener("click", closeAfter(() => deleteExercise(block.id)));
+  upBtn.addEventListener("click", closeAfter(() => moveUp(block.id)));
+  downBtn.addEventListener("click", closeAfter(() => moveDown(block.id)));
+  letterBtn.addEventListener("click", closeAfter(() => toggleLettering(block.id)));
+
+  toolbar.appendChild(editBtn);
+  toolbar.appendChild(deleteBtn);
+  toolbar.appendChild(upBtn);
+  toolbar.appendChild(downBtn);
+  toolbar.appendChild(letterBtn);
+
+  wrapper.appendChild(toolbar);
+  wrapper.appendChild(contentContainer);
+
+  return { editBtn, deleteBtn, upBtn, downBtn, letterBtn, contentContainer, wrapper };
 }
 
 function openEditorForType(caption, fn, typeId) {
@@ -1780,6 +1919,7 @@ function handleModeChange() {
 }
 
 function initWorksheet() {
+    initToolbarGlobalDismiss();
     const saved = localStorage.getItem("worksheetData");
 
     if (saved) {
@@ -2082,7 +2222,7 @@ function validateMatchingInput(bodyValue) {
 }
 
 function createWordGrid(data = {
-    heading: "Conjugate the verbs in the present tense.",
+    heading: "Please fill in the table.",
     rows: 3,
     cols: 4,
     headerRow: false,

@@ -25,7 +25,7 @@ body {
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: scroll;
     margin-top: var(--header-height);
 }
 
@@ -167,6 +167,28 @@ header h1 {
     text-align: center;
 }
 
+@media (max-width: 600px) {
+    header {
+        top: 0;
+        left: 0;
+        right: 0;
+        height: var(--header-height);
+        width: 100%;
+        background-color: lightgray;
+        border-bottom: solid 1px black;
+        position: fixed;
+        z-index: 5;
+        display: flex;
+        flex: 0 0 auto;
+        justify-content: left;
+    }
+
+    header h1 {
+        text-align: center;
+        padding-left: 2em;
+    }
+}
+
 .exercise-button-wrapper {
     display: flex;
     flex-direction: column;
@@ -198,7 +220,7 @@ header h1 {
 .exercise-block {
     position: relative;
     padding: 0;
-    z-index: 0; /* create a stacking context */
+    z-index: 0;
 }
 
 .exercise-block::before {
@@ -211,30 +233,35 @@ header h1 {
     background-color: transparent;
     border-radius: 10px;
     z-index: -1;
-    pointer-events: none; /* so it doesn't block toolbar clicks */
+    pointer-events: none;
 }
 
-.exercise-block:hover::before {
-    background-color: lightgray;
-}
-
-.exercise-block:hover .block-toolbar {
-    opacity: 1;
-    pointer-events: auto;
+.exercise-block.toolbar-visible::before {
+  background-color: lightgray;
 }
 
 .block-content {
     width: 100%;
 }
 
+/* Toolbar: hidden by default (not in layout; not clickable) */
 .block-toolbar {
     position: absolute;
-    display: flex;
     top: -0.5em;
     right: 0.5em;
     gap: 0.25em;
+
+    display: none;
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
+}
+
+.exercise-block.toolbar-visible .block-toolbar {
+  display: flex;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .toolbar-btns {
@@ -243,6 +270,10 @@ header h1 {
     width: 50px;
     border-radius: 30%;
     user-select: none;
+}
+
+.toolbar-btns img {
+  pointer-events: none;
 }
 
 .text-box {
