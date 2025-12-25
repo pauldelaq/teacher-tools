@@ -1,6 +1,7 @@
 * {
   font-family: Arial;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 :root {
@@ -22,6 +23,12 @@ body {
     flex-direction: column;
     overflow: hidden;
     -webkit-text-size-adjust: 100%;
+}
+
+@media (max-width: 816px) {
+    body {
+        background-color: white;
+    }
 }
 
 .stuff-under-header {
@@ -141,8 +148,9 @@ body {
     left: 0;
     z-index: 2;
     background-color: white;
-    padding: 1em;
+    padding: 3em;
     overflow-y: auto;
+    padding-bottom: 5em;
 }
 
 .menu-buttons {
@@ -315,14 +323,14 @@ ul {
     -webkit-text-size-adjust: 100%;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 816px) {
     .worksheet-page {
-        width: 816px;
-        min-width: 816px;
+        width: 624px;
+        min-width: 624px;
         margin: 24px auto;
-        padding: 96px;
-        margin-top: 0;
-        margin-bottom: 0;
+        margin-top: 2em;
+        margin-bottom: 2em;
+        padding: 0;
     }
 }
 
