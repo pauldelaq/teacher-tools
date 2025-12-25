@@ -10,6 +10,8 @@
 html, body {
   height: 100%;
   scrollbar-gutter: both-edges;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -19,6 +21,7 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    -webkit-text-size-adjust: 100%;
 }
 
 .stuff-under-header {
@@ -27,6 +30,7 @@ body {
     overflow-y: auto;
     overflow-x: auto;
     margin-top: var(--header-height);
+    -webkit-text-size-adjust: 100%;
 }
 
 .header-tools {
@@ -224,6 +228,7 @@ header h1 {
     position: relative;
     padding: 0;
     z-index: 0;
+    -webkit-text-size-adjust: 100%;
 }
 
 .exercise-block::before {
@@ -307,6 +312,7 @@ ul {
     background: white;
     line-height: 1.35;
     box-sizing: border-box;
+    -webkit-text-size-adjust: 100%;
 }
 
 @media (max-width: 800px) {
