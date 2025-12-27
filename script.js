@@ -16,6 +16,7 @@ const saveEditBtn = document.getElementById("save-edit");
 const editorBody = document.getElementById("editor-body");
 const modeBtn = document.getElementById("mode-button");
 const copyBtn = document.getElementById("copy-button");
+const printBtn = document.getElementById("print-button");
 const worksheet = document.getElementById("worksheet");
 let currentEditingBlockId = null;
 let currentEditingType = null;
@@ -30,7 +31,7 @@ const sampleBlocks = [
   {
     id: 2,
     type: "instruction",
-    data: { text: "Welcome! Hover over any exercise block to view more options.", showLetter: false }
+    data: { text: "Welcome! Hover over or click any exercise block to view more options.", showLetter: false }
   },
   {
     id: 3,
@@ -124,7 +125,7 @@ const sampleBlocks = [
     type: "essay-questions",
     data: { 
         heading: "Please answer in complete sentences.",
-        text: "How do you feel about cats? Please write 50 words.\nDo you like to eat fried chicken? Why or why not?\nWhy is the sky blue?",
+        text: "How do you feel about cats? Please write 30 words.\nDo you like to eat fried chicken? Why or why not?\nWhy is the sky blue?",
         showLetter: true,
         answerBoxType: "lined",
         answerBoxSize: "paragraph",
@@ -625,7 +626,7 @@ function renderExerciseBlocks() {
                     scrambledSenText.appendChild(generatedSen);
                     if (block.data.showAnswerLines) {
                         const answerLine = document.createElement("div");
-                        answerLine.innerHTML = "<br>________________________________________________________________";
+                        answerLine.innerHTML = "<br>______________________________________________________________";
                         answerLine.classList.add("answer-line");
                         generatedSen.appendChild(answerLine);
                     }
@@ -1015,7 +1016,7 @@ function renderExerciseBlocks() {
                     scrambledSenText.appendChild(generatedSen);
                     if (block.data.showAnswerLines) {
                         const answerLine = document.createElement("div");
-                        answerLine.innerHTML = "<br>________________________________________________________________";
+                        answerLine.innerHTML = "<br>______________________________________________________________";
                         answerLine.classList.add("answer-line");
                         generatedSen.appendChild(answerLine);
                     }
@@ -1890,6 +1891,7 @@ function hideToolbarButtons() {
     closeExerciseMenuBtn.classList.add("hidden");
     modeBtn.classList.add("hidden");
     copyBtn.classList.add("hidden");
+    printBtn.classList.add("hidden");
 }
 
 function setToolbarButtons() {
@@ -1897,6 +1899,7 @@ function setToolbarButtons() {
     closeExerciseMenuBtn.classList.add("hidden");
     modeBtn.classList.remove("hidden");
     copyBtn.classList.remove("hidden");
+    printBtn.classList.remove("hidden");
     hamburgerMenuBtn.classList.remove("hidden");
     document.body.classList.remove("overlay-open");
 }
@@ -2893,6 +2896,10 @@ addExerciseBtn.addEventListener("click", () => {
     setOverlayOpen(true);
     exerciseMenuOpen = true;
 });
+
+printBtn.addEventListener("click", () => {
+    window.print();
+})
 
 copyBtn.addEventListener("click", () => {
     try {

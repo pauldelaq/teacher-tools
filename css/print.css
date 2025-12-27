@@ -1,0 +1,16 @@
+header, .exercise-block.toolbar-visible .block-toolbar {
+    display: none;
+}
+
+.stuff-under-header {
+    overflow: visible;
+    margin-top: 0;
+}
+
+.worksheet-page {
+    padding: 0;
+}
+
+@page {
+  margin: 1in;
+}
