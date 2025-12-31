@@ -397,7 +397,7 @@ label {
 .letter-cell {
     text-align: right;
     font-weight: bold;
-    width: 1em;
+    width: 1.5em;
     vertical-align: top;
 }
 
@@ -412,7 +412,7 @@ label {
 }
 
 .space-and-number {
-    width: 3em;
+    width: 3.5em;
     vertical-align: top;
 }
 

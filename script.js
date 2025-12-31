@@ -2098,7 +2098,7 @@ function createClozeTest(data = { heading: "Read the passage and choose the corr
     `;
     setupHeadingToggle();
 
-    exerciseDescription.textContent = "Please type the passage you wish to use in the text area. Enclose each word you want removed in [square/brackets/separated/by/slashes/for/each/possible/choice]. The first option must be the correct answer.  Use a maximum of four possible choices."
+    exerciseDescription.textContent = "Please type the passage you wish to use in the text area. Enclose each word you want removed in square brackets separated by slashes for each possible choice, [like/this]. The first option must be the correct answer.  Use a maximum of four possible choices."
 
     editorBody.innerHTML = `
         <textarea class="text-box" placeholder="Cats typically have [two/three/four/six] ears. They generally like to eat [fish/cabbage/onions/pickles]. In cartoons, they often drink [milk/cola/tea/beer], but this is not realistic. Typically, they simply drink [water/tea/cola/wine].">${data.text || ""}</textarea>
@@ -2678,7 +2678,7 @@ function createMultipleChoiceQuestions(data = { heading: "Choose the correct ans
         <input type="checkbox" id="headingCheckbox" ${headingChecked}><label for="headingCheckbox"> Include Instruction</label>
     `;
 
-    exerciseDescription.textContent = "Please type the questions you wish to use in the text area, followed by a list of answers in [square/brackets/separated/by/slashes]. The first option must be the correct answer. Add any additional questions on a new line. Use a maximum of four possible answers.";
+    exerciseDescription.textContent = "Please type the questions you wish to use in the text area, followed by a list of answers in square brackets separated by slashes, [like/this]. The first option must be the correct answer. Add any additional questions on a new line. Use a maximum of four possible answers.";
 
     const numberedChecked = data.numbered ? "checked" : "";
 
