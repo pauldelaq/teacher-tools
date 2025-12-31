@@ -1,10 +1,10 @@
 {
-  "id": "/worksheetMaker/index.html",
+  "id": "/teacher-tools/index.html",
   "name": "My Worksheets",
     "short_name": "MW",
     "description": "PWA version of My Worksheets",
-    "start_url": "/worksheetMaker/index.html",
-    "scope": "/worksheetMaker/",
+    "start_url": "/teacher-tools/index.html",
+    "scope": "/teacher-tools/",
     "display": "standalone",
     "background_color": "white",
     "theme_color": "white",
