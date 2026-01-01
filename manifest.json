@@ -7,7 +7,7 @@
   "scope": "/teacher-tools/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "theme_color": "lightgray",
   "icons": [
     {
       "src": "/teacher-tools/icons/icon-192x192.png",
