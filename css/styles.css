@@ -355,7 +355,6 @@ ul {
 
 .answer-line {
     color: black;
-    font-weight: bold;
 }
 
 label {
@@ -490,7 +489,6 @@ label {
 }
 
 .lined {
-    width: 100%;
     line-height: 1em;
     border-spacing: 0;
     padding: 0;
@@ -515,35 +513,28 @@ label {
 .simple-lines td {
     border: none;
     border-bottom: 1px solid black;
-    height: 66px;
+    height: 3em;
     line-height: 1em;
     padding: 0;
 }
 
 table.lined td {
   padding: 0;
-  height: 22px;
+  height: 3em;
   line-height: 22px;
+  text-align: center;
+  vertical-align: middle;
 }
 
 table.lined tr {
     height: 1em;
 }
 
-td.top-lined {
-  border-top: 2px solid black;
-  border-left: 2px solid black;
-  border-right: 2px solid black;
+td.lined {
+  border: 1px solid black;
 }
 
-td.bottom-lined {
-  border-bottom: 2px solid black;
-  border-top: 1px dashed black;
-  border-left: 2px solid black;
-  border-right: 2px solid black;
-}
-
-td.spacer-row {
+table.lined td.spacer-row {
   border: none;
   height: 1em;
 }

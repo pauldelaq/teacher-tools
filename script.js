@@ -470,20 +470,16 @@ function renderExerciseBlocks() {
 
                 for (let i = 0; i < numberOfRowsToAdd; i++) {
                     if (block.data.answerBoxType === "lined") {
-                        const generatedRowTop = document.createElement("tr");
-                        const cellTop = document.createElement("td");
-                        cellTop.classList.add("top-lined");
-                        generatedRowTop.appendChild(cellTop);
-                        answerBox.appendChild(generatedRowTop);
-
-                        const generatedRowBottom = document.createElement("tr");
-                        const cellBottom = document.createElement("td");
-                        cellBottom.classList.add("bottom-lined");
-                        generatedRowBottom.appendChild(cellBottom);
-                        answerBox.appendChild(generatedRowBottom);
+                        const generatedRow = document.createElement("tr");
+                        const cell = document.createElement("td");
+                        cell.classList.add("lined");
+                        cell.textContent = "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - "
+                        generatedRow.appendChild(cell);
+                        answerBox.appendChild(generatedRow);
 
                         const spacerRow = document.createElement("tr");
                         const cellSpacer = document.createElement("td");
+                        cellSpacer.textContent = "\u00A0";
                         cellSpacer.classList.add("spacer-row");
                         spacerRow.appendChild(cellSpacer);
                         answerBox.appendChild(spacerRow);
