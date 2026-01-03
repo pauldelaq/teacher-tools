@@ -14,3 +14,16 @@ header, .exercise-block.toolbar-visible .block-toolbar {
 @page {
   margin: 1in;
 }
+
+table.lined tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+table.lined td.spacer-row:empty::before {
+  content: "\00a0";
+}
+
+table.lined td {
+  vertical-align: middle;
+}
