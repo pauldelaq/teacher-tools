@@ -182,8 +182,10 @@ header {
     flex: 0 0 auto;
 }
 
-header h1 {
+.header-title {
     text-align: center;
+    font-size: 32px;
+    font-weight: bold;
 }
 
 @media (max-width: 600px) {
@@ -201,9 +203,14 @@ header h1 {
         flex: 0 0 auto;
         justify-content: left;
     }
+}
 
-    header h1 {
-        text-align: center;
+@media (max-width: 720px) {
+    header {
+        justify-content: left;
+    }
+
+    .header-title {
         padding-left: 2em;
     }
 }

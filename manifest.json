@@ -1,12 +1,12 @@
 {
   "id": "/teacher-tools/",
   "name": "My Worksheets",
-  "short_name": "MW",
+  "short_name": "My Worksheets",
   "description": "PWA version of My Worksheets",
   "start_url": "/teacher-tools/",
   "scope": "/teacher-tools/",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "lightgray",
   "theme_color": "lightgray",
   "icons": [
     {

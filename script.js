@@ -18,6 +18,7 @@ const modeBtn = document.getElementById("mode-button");
 const copyBtn = document.getElementById("copy-button");
 const printBtn = document.getElementById("print-button");
 const worksheet = document.getElementById("worksheet");
+const headerTitle = document.getElementById("header-title");
 let currentEditingBlockId = null;
 let currentEditingType = null;
 let currentViewMode = "student";
@@ -281,6 +282,14 @@ function showMenu(el) {
 
 function closeMenu(el) {
     el.classList.add("hidden");
+}
+
+function updateHeaderTitle() {
+    if (window.innerWidth < 528) {
+        headerTitle.textContent = "MW"
+    } else {
+        headerTitle.textContent = "My Worksheets"
+    }
 }
 
 // Helper to wire heading checkbox to enable/disable heading textarea
@@ -3004,9 +3013,10 @@ loadTemplateWorksheetBtn.addEventListener("click", () => {
 }
 );
 
+window.addEventListener('resize', updateHeaderTitle);
+
 // Stuff to happen upon page load
 
 initWorksheet();
 renderExerciseTypes();
-
-// Stuff that should happen only after rendering main content
+updateHeaderTitle();
