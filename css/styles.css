@@ -420,6 +420,7 @@ label {
 .space-and-number {
     width: 3.5em;
     vertical-align: top;
+    text-align: right;
 }
 
 .buffer-cell {
