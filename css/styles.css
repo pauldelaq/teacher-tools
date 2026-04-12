@@ -613,8 +613,17 @@ table.lined td.spacer-row {
     padding-top: 1em;
 }
 
-.saving-disabled-text {
+.saving-disabled-text, .saving-disabled-menu-text {
     font-style: italic;
     font-size: 24px;
     padding-top: 1em;
+    text-align: center;
+}
+
+.info-button {
+    margin-top: 2em;
+}
+
+.info-menu {
+    font-size: 24px;
 }

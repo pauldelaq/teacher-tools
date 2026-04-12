@@ -1,8 +1,12 @@
 const addExerciseBtn = document.getElementById("add-button");
 const hamburgerMenuBtn = document.getElementById("hamburger-menu-button");
 const hamburgerMenu = document.getElementById("hamburger-menu");
+const infoMenu = document.getElementById("info-menu");
 const newWorksheetBtn = document.getElementById("new-worksheet-button");
 const loadTemplateWorksheetBtn = document.getElementById("load-template-worksheet-button");
+const loadWorksheetBtn = document.getElementById("load-worksheet-button");
+const saveWorksheetBtn = document.getElementById("save-worksheet-button");
+const infoBtn = document.getElementById("info-button");
 const createExerciseMenu = document.getElementById("create-exercise-menu");
 const exerciseListDisplay = document.getElementById("exercise-list-display");
 const closeExerciseMenuBtn = document.getElementById("close-exercise-menu");
@@ -20,6 +24,14 @@ const printBtn = document.getElementById("print-button");
 const worksheet = document.getElementById("worksheet");
 const headerTitle = document.getElementById("header-title");
 const savingDisabledText = document.getElementById("saving-disabled-text");
+const savingDisabledMenuText = document.getElementById("saving-disabled-menu-text");
+
+// -- Worksheet file input for import/export --
+const worksheetFileInput = document.createElement("input");
+worksheetFileInput.type = "file";
+worksheetFileInput.accept = ".json,application/json";
+worksheetFileInput.classList.add("hidden");
+document.body.appendChild(worksheetFileInput);
 let currentEditingBlockId = null;
 let currentEditingType = null;
 let currentViewMode = "student";
@@ -278,13 +290,115 @@ const exerciseTypes = [
 
 // general functions
 
+function buildWorksheetExportData() {
+    return {
+        app: "my-worksheets",
+        worksheet: {
+            exerciseBlocks
+        }
+    };
+}
+
+function isValidWorksheetImport(data) {
+    if (!data || typeof data !== "object") return false;
+    if (data.app !== "my-worksheets") return false;
+    if (!data.worksheet || typeof data.worksheet !== "object") return false;
+    if (!Array.isArray(data.worksheet.exerciseBlocks)) return false;
+
+    return true;
+}
+
+async function saveWorksheetToFile() {
+    const exportData = buildWorksheetExportData();
+    const json = JSON.stringify(exportData, null, 2);
+
+    if ("showSaveFilePicker" in window) {
+        try {
+            const handle = await window.showSaveFilePicker({
+                suggestedName: `my-worksheet-${new Date().toISOString().slice(0, 10)}.json`,
+                types: [
+                    {
+                        description: "JSON Files",
+                        accept: {
+                            "application/json": [".json"]
+                        }
+                    }
+                ]
+            });
+
+            const writable = await handle.createWritable();
+            await writable.write(json);
+            await writable.close();
+            return;
+        } catch (error) {
+            if (error.name === "AbortError") {
+                return;
+            }
+            console.error("File picker save failed:", error);
+        }
+    }
+
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `my-worksheet-${new Date().toISOString().slice(0, 10)}.json`;
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+function openWorksheetFilePicker() {
+    worksheetFileInput.value = "";
+    worksheetFileInput.click();
+}
+
+async function loadWorksheetFromFile(file) {
+    if (!file) return;
+
+    const text = await file.text();
+    const data = JSON.parse(text);
+
+    if (!isValidWorksheetImport(data)) {
+        alert("That file is not a valid My Worksheets file.");
+        return;
+    }
+
+    const confirmed = confirm("Loading this file will replace the current worksheet. Continue?");
+    if (!confirmed) return;
+
+    exerciseBlocks = data.worksheet.exerciseBlocks;
+    currentViewMode = "student";
+    isViewingTemplateWorksheet = false;
+
+    renderExerciseBlocks();
+    persistWorksheet();
+    updateSavingDisabledUI();
+    alert("Worksheet loaded.");
+
+    closeMenu(hamburgerMenu);
+    closeMenu(editingInterface);
+    setToolbarButtons();
+    setOverlayOpen(false);
+    hamburgerMenuBtn.innerHTML = `<img src="./assets/menu.svg">`;
+    hamburgerMenuOpen = false;
+
+}
+
 function updateSavingDisabledUI() {
     if (isViewingTemplateWorksheet) {
         savingDisabledText.classList.remove("hidden");
         saveEditBtn.disabled = true;
+        savingDisabledMenuText.classList.remove("hidden");
+        saveWorksheetBtn.disabled = true;
     } else {
         savingDisabledText.classList.add("hidden");
         saveEditBtn.disabled = false;
+        savingDisabledMenuText.classList.add("hidden");
+        saveWorksheetBtn.disabled = false;
     }
 }
 
@@ -304,7 +418,7 @@ function updateHeaderTitle() {
     }
 }
 
-// Helper to wire heading checkbox to enable/disable heading textarea
+// infoer to wire heading checkbox to enable/disable heading textarea
 function setupHeadingToggle() {
     const headingCheckbox = document.getElementById("headingCheckbox");
     const headingTextarea = headingContainer.querySelector(".heading-input");
@@ -1922,6 +2036,27 @@ function setToolbarButtons() {
     document.body.classList.remove("overlay-open");
 }
 
+// --- Worksheet file import/export event wiring ---
+if (saveWorksheetBtn) {
+    saveWorksheetBtn.addEventListener("click", saveWorksheetToFile);
+}
+
+if (loadWorksheetBtn) {
+    loadWorksheetBtn.addEventListener("click", openWorksheetFilePicker);
+}
+
+worksheetFileInput.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+        await loadWorksheetFromFile(file);
+    } catch (error) {
+        console.error("Error loading worksheet file:", error);
+        alert("Unable to load that file.");
+    }
+});
+
 function setOverlayOpen(isOpen) {
     document.body.classList.toggle("overlay-open", !!isOpen);
 }
@@ -1970,6 +2105,7 @@ function loadTemplateWorksheet() {
     persistWorksheet();
     renderExerciseBlocks();
     isViewingTemplateWorksheet = true;
+    updateSavingDisabledUI();
 }
 
 // functions to build UI for individual exercises
@@ -2968,6 +3104,10 @@ modeBtn.addEventListener("click", () => handleModeChange());
 
 let hamburgerMenuOpen = false;
 hamburgerMenuBtn.addEventListener("click", () => {
+    if (!infoMenu.classList.contains("hidden")) {
+        closeMenu(infoMenu);
+        return;
+        }
     if (hamburgerMenuOpen) {
         closeMenu(hamburgerMenu);
         hamburgerMenuBtn.innerHTML = `<img src="./assets/menu.svg">`;
@@ -3003,10 +3143,19 @@ hamburgerMenuBtn.addEventListener("click", () => {
     }
 })
 
+infoBtn.addEventListener("click", () => {
+    showMenu(infoMenu);
+})
+
 newWorksheetBtn.addEventListener("click", () => {
+    const confirmed = confirm("Creating a new worksheet will replace the current one. Continue?");
+    if (!confirmed) return;
+
     localStorage.removeItem("worksheetData");
     exerciseBlocks = [];
+    currentViewMode = "student";
     renderExerciseBlocks();
+    persistWorksheet();
 
     closeMenu(hamburgerMenu);
     closeMenu(editingInterface);
@@ -3015,9 +3164,15 @@ newWorksheetBtn.addEventListener("click", () => {
     hamburgerMenuBtn.innerHTML = `<img src="./assets/menu.svg">`;
     hamburgerMenuOpen = false;
     isViewingTemplateWorksheet = false;
+    updateSavingDisabledUI();
 })
 
 loadTemplateWorksheetBtn.addEventListener("click", () => {
+    if (!isViewingTemplateWorksheet) {
+    const confirmed = confirm("Loading the template worksheet will replace the current one. Continue?");
+    if (!confirmed) return;
+    }
+
     loadTemplateWorksheet();
     closeMenu(hamburgerMenu);
     closeMenu(editingInterface);
@@ -3025,6 +3180,7 @@ loadTemplateWorksheetBtn.addEventListener("click", () => {
     setOverlayOpen(false);
     hamburgerMenuBtn.innerHTML = `<img src="./assets/menu.svg">`;
     hamburgerMenuOpen = false;
+    updateSavingDisabledUI();
 }
 );
 
@@ -3034,4 +3190,5 @@ window.addEventListener('resize', updateHeaderTitle);
 
 initWorksheet();
 renderExerciseTypes();
+updateSavingDisabledUI();
 updateHeaderTitle();
