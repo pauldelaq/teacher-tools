@@ -19,10 +19,12 @@ const copyBtn = document.getElementById("copy-button");
 const printBtn = document.getElementById("print-button");
 const worksheet = document.getElementById("worksheet");
 const headerTitle = document.getElementById("header-title");
+const savingDisabledText = document.getElementById("saving-disabled-text");
 let currentEditingBlockId = null;
 let currentEditingType = null;
 let currentViewMode = "student";
 let exerciseBlocks = [];
+let isViewingTemplateWorksheet = true;
 const sampleBlocks = [
  {
     id: 1,
@@ -275,6 +277,16 @@ const exerciseTypes = [
 ]
 
 // general functions
+
+function updateSavingDisabledUI() {
+    if (isViewingTemplateWorksheet) {
+        savingDisabledText.classList.remove("hidden");
+        saveEditBtn.disabled = true;
+    } else {
+        savingDisabledText.classList.add("hidden");
+        saveEditBtn.disabled = false;
+    }
+}
 
 function showMenu(el) {
     el.classList.remove("hidden");
@@ -1305,6 +1317,7 @@ function openEditorForType(caption, fn, typeId) {
     closeMenu(createExerciseMenu);
     showMenu(editingInterface);
 
+    updateSavingDisabledUI();
     exerciseType.textContent = `Create ${caption}`;
     fn();
     hideToolbarButtons();
@@ -1846,7 +1859,7 @@ function editExercise(blockId) {
     }
 
     typeConfig.buttonFunction(editorArg);
-
+    updateSavingDisabledUI();
     hideToolbarButtons();
 }
 
@@ -1956,6 +1969,7 @@ function loadTemplateWorksheet() {
     exerciseBlocks = structuredClone(sampleBlocks);
     persistWorksheet();
     renderExerciseBlocks();
+    isViewingTemplateWorksheet = true;
 }
 
 // functions to build UI for individual exercises
@@ -3000,6 +3014,7 @@ newWorksheetBtn.addEventListener("click", () => {
     setOverlayOpen(false);
     hamburgerMenuBtn.innerHTML = `<img src="./assets/menu.svg">`;
     hamburgerMenuOpen = false;
+    isViewingTemplateWorksheet = false;
 })
 
 loadTemplateWorksheetBtn.addEventListener("click", () => {

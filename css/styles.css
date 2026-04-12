@@ -612,3 +612,9 @@ table.lined td.spacer-row {
 .exercise-description {
     padding-top: 1em;
 }
+
+.saving-disabled-text {
+    font-style: italic;
+    font-size: 24px;
+    padding-top: 1em;
+}
