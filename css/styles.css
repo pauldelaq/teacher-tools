@@ -6,6 +6,7 @@
 
 :root {
     --header-height: 60px;
+    --highlight-color: paleturquoise;
 }
 
 html, body {
@@ -65,6 +66,10 @@ body {
     color: black;
 }
 
+.top-menu-button:hover {
+    background-color: var(--highlight-color);
+}
+
 .top-menu-button img {
   object-fit: contain;
   pointer-events: none;
@@ -83,6 +88,13 @@ body {
 
 .hamburger-menu button {
     font-size: 32px;
+    border: 1px solid;
+    border-radius: 8px;
+    background-color: lightgray;
+}
+
+.hamburger-menu button:hover {
+    background-color: var(--highlight-color);
 }
 
 .hamburger-menu {
@@ -159,7 +171,13 @@ body {
 
 .menu-buttons {
     font-size: 36px;
-    height: 1.5em;
+    padding: 0.25em;
+    border: 1px solid;
+    border-radius: 8px;
+}
+
+.menu-buttons:hover {
+    background-color: var(--highlight-color);
 }
 
 .hidden {
@@ -231,6 +249,12 @@ header {
     height: 250px;
     width: 250px;
     font-size: 16px;
+    background-color: #efefef;
+    border: black 1px solid;
+}
+
+.exercise-type-button:hover {
+    background-color: lightgray;
 }
 
 .exercise-type {
@@ -297,6 +321,10 @@ header {
     width: 50px;
     border-radius: 30%;
     user-select: none;
+}
+
+.toolbar-btns:hover {
+    background-color: var(--highlight-color);
 }
 
 .toolbar-btns img {
@@ -626,4 +654,49 @@ table.lined td.spacer-row {
 
 .info-menu {
     font-size: 24px;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.4); /* fade background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 500px;
+  width: 80%;
+  text-align: center;
+  font-size: 24px;
+}
+
+.modal-buttons {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-around;
+}
+
+.modal-buttons button {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid black;
+  background: lightgray;
+  font-size: 24px;
+}
+
+.modal-buttons button:hover {
+    background-color: var(--highlight-color);
 }

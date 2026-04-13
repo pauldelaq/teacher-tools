@@ -36,7 +36,7 @@ let currentEditingBlockId = null;
 let currentEditingType = null;
 let currentViewMode = "student";
 let exerciseBlocks = [];
-let isViewingTemplateWorksheet = true;
+let isViewingTemplateWorksheet = !localStorage.getItem("worksheetData");
 const sampleBlocks = [
  {
     id: 1,
@@ -290,6 +290,67 @@ const exerciseTypes = [
 
 // general functions
 
+function showConfirmModal(message) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById("custom-modal");
+        const messageEl = document.getElementById("modal-message");
+        const confirmBtn = document.getElementById("modal-confirm");
+        const cancelBtn = document.getElementById("modal-cancel");
+
+        messageEl.textContent = message;
+        confirmBtn.textContent = "OK";
+        cancelBtn.textContent = "Cancel";
+        cancelBtn.classList.remove("hidden");
+        modal.classList.remove("hidden");
+
+        const cleanup = () => {
+            modal.classList.add("hidden");
+            confirmBtn.removeEventListener("click", onConfirm);
+            cancelBtn.removeEventListener("click", onCancel);
+        };
+
+        const onConfirm = () => {
+            cleanup();
+            resolve(true);
+        };
+
+        const onCancel = () => {
+            cleanup();
+            resolve(false);
+        };
+
+        confirmBtn.addEventListener("click", onConfirm);
+        cancelBtn.addEventListener("click", onCancel);
+    });
+}
+
+function showAlertModal(message) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById("custom-modal");
+        const messageEl = document.getElementById("modal-message");
+        const confirmBtn = document.getElementById("modal-confirm");
+        const cancelBtn = document.getElementById("modal-cancel");
+
+        messageEl.textContent = message;
+        confirmBtn.textContent = "OK";
+        cancelBtn.classList.add("hidden");
+        modal.classList.remove("hidden");
+
+        const cleanup = () => {
+            modal.classList.add("hidden");
+            cancelBtn.classList.remove("hidden");
+            confirmBtn.removeEventListener("click", onConfirm);
+        };
+
+        const onConfirm = () => {
+            cleanup();
+            resolve();
+        };
+
+        confirmBtn.addEventListener("click", onConfirm);
+    });
+}
+
 function buildWorksheetExportData() {
     return {
         app: "my-worksheets",
@@ -363,11 +424,11 @@ async function loadWorksheetFromFile(file) {
     const data = JSON.parse(text);
 
     if (!isValidWorksheetImport(data)) {
-        alert("That file is not a valid My Worksheets file.");
+        await showAlertModal("That file is not a valid My Worksheets file.");
         return;
     }
 
-    const confirmed = confirm("Loading this file will replace the current worksheet. Continue?");
+    const confirmed = await showConfirmModal("Loading this file will replace the current worksheet. Continue?");
     if (!confirmed) return;
 
     exerciseBlocks = data.worksheet.exerciseBlocks;
@@ -377,7 +438,7 @@ async function loadWorksheetFromFile(file) {
     renderExerciseBlocks();
     persistWorksheet();
     updateSavingDisabledUI();
-    alert("Worksheet loaded.");
+    await showAlertModal("Worksheet loaded.");
 
     closeMenu(hamburgerMenu);
     closeMenu(editingInterface);
@@ -456,6 +517,32 @@ function renderExerciseTypes() {
 }
 
 // Logic for rendering the actual exercises
+// --- Worksheet startup logic: load saved worksheet or template ---
+// This block replaces any previous startup logic for exerciseBlocks.
+(function initializeWorksheetBlocks() {
+    const savedWorksheet = localStorage.getItem("worksheetData");
+
+    if (savedWorksheet) {
+        try {
+            const parsed = JSON.parse(savedWorksheet);
+            exerciseBlocks = Array.isArray(parsed.exerciseBlocks) ? parsed.exerciseBlocks : [];
+            currentViewMode = "student";
+            isViewingTemplateWorksheet = false;
+        } catch (error) {
+            console.error("Error parsing saved worksheet data:", error);
+            exerciseBlocks = structuredClone(sampleBlocks);
+            currentViewMode = "student";
+            isViewingTemplateWorksheet = true;
+        }
+    } else {
+        exerciseBlocks = structuredClone(sampleBlocks);
+        currentViewMode = "student";
+        isViewingTemplateWorksheet = true;
+    }
+    renderExerciseBlocks();
+    updateSavingDisabledUI();
+})();
+
 function renderExerciseBlocks() {
     worksheet.innerHTML = "";
 
@@ -1438,7 +1525,7 @@ function openEditorForType(caption, fn, typeId) {
     hamburgerMenuBtn.classList.add("hidden");
 }
 
-function saveEdit() {
+async function saveEdit() {
     const bodyTextarea = editorBody.querySelector(".text-box");
     const hasBodyTextarea = !!bodyTextarea;
     const bodyValue = hasBodyTextarea ? bodyTextarea.value : "";
@@ -1483,7 +1570,7 @@ function saveEdit() {
          exerciseBlocks.find(b => b.id === currentEditingBlockId)?.type === "word-grid");
 
     if (!isWordGrid && hasBodyTextarea && bodyValue.trim() === "") {
-        alert("Please type your exercise into the text box.");
+        showAlertModal("Please type your exercise into the text box.");
         return;
     }
 
@@ -1511,7 +1598,7 @@ function saveEdit() {
                 };
             } else if (block.type === "blanks-passage") {
                 if (!bodyValue.match(/\[(.*?)\]/g)) {
-                    alert("Remember to include [square brackets] for the words you want to remove for the exercise.");
+                    showAlertModal("Remember to include [square brackets] for the words you want to remove for the exercise.");
                     return;
                 }
 
@@ -1736,6 +1823,11 @@ function saveEdit() {
                 showHeading: showHeadingValue
             };
         } else if (currentEditingType === "blanks-passage") {
+            if (!bodyValue.match(/\[(.*?)\]/g)) {
+                showAlertModal("Remember to include [square brackets] for the words you want to remove for the exercise.");
+                return;
+            }
+
             data = {
                 heading: headingValue,
                 text: bodyValue,
@@ -1743,10 +1835,12 @@ function saveEdit() {
                 wordList: makeWordListFromPassage(bodyValue),
                 showLetter: true,
                 showHeading: showHeadingValue
-                };
+            };
         } else if (currentEditingType === "multiple-choice-question") {
-                const questions = makeMcqQuestions(bodyValue);
+            const isValid = validateMcqInput(bodyValue);
+            if (!isValid) return;
 
+            const questions = makeMcqQuestions(bodyValue);
                 questions.forEach((question) => {
                     const correctAnswer = question.choices[question.correctIndex];
                     const shuffled = [...question.choices];
@@ -1939,7 +2033,7 @@ function saveEdit() {
 
     renderExerciseBlocks();
     persistWorksheet();
-    alert("Saved");
+    showAlertModal("Saved");
 }
 
 function editExercise(blockId) {
@@ -2053,7 +2147,7 @@ worksheetFileInput.addEventListener("change", async (e) => {
         await loadWorksheetFromFile(file);
     } catch (error) {
         console.error("Error loading worksheet file:", error);
-        alert("Unable to load that file.");
+        await showAlertModal("Unable to load that file.");
     }
 });
 
@@ -2265,7 +2359,7 @@ function validateClozeInput(bodyValue) {
 
     // No square brackets
     if (!matches) {
-        alert(`Don't forget to add [square/brackets/with/slashes] for your answer choices.`);
+        showAlertModal(`Don't forget to add [square/brackets/with/slashes] for your answer choices.`);
         return false;
     }
 
@@ -2277,14 +2371,14 @@ function validateClozeInput(bodyValue) {
         // Duplicate choices
         const hasDuplicates = new Set(choicesArray).size !== choicesArray.length;
         if (hasDuplicates) {
-            alert(`Please don't use the same answer more than once.`);
+            showAlertModal(`Please don't use the same answer more than once.`);
             return false;
         }
 
         // Too many choices
         const slashCount = (inner.match(/\//g) || []).length;
         if (slashCount > 3) {
-            alert(`Please use a maximum of four choices per blank.`);
+            showAlertModal(`Please use a maximum of four choices per blank.`);
             return false;
         }
     }
@@ -2358,21 +2452,21 @@ function validateMatchingInput(bodyValue) {
 
         // Check for a slash
         if (!trimmed.includes("/")) {
-            alert(`Don't forget to add slashes between your pairs (problem on line ${i + 1}).`);
+            showAlertModal(`Don't forget to add slashes between your pairs (problem on line ${i + 1}).`);
             return false;
         }
 
         // Check that there is only one slash
         const slashCount = (trimmed.match(/\//g) || []).length;
         if (slashCount > 1) {
-            alert(`Please use only one slash per pair (problem on line ${i + 1}).`);
+            showAlertModal(`Please use only one slash per pair (problem on line ${i + 1}).`);
             return false;
         }
     }
 
     // Check more than one line total
     if (lines.filter(l => l.trim()).length < 2) {
-        alert("Please enter more than one line.");
+        showAlertModal("Please enter more than one line.");
         return false;
     }
 
@@ -2881,13 +2975,13 @@ function validateMcqInput(bodyValue) {
 
         // No square brackets
         if (!matches) {
-            alert(`Don't forget to add [square/brackets/with/slashes] for your answer choices (problem on line ${i + 1}).`);
+            showAlertModal(`Don't forget to add [square/brackets/with/slashes] for your answer choices (problem on line ${i + 1}).`);
             return false;
         }
 
         // Lines have too many []
         if (matches.length > 1) {
-            alert(`Each line should just have one [answers] group. Please put each question + choices on its own line (problem on line ${i + 1}).`);
+            showAlertModal(`Each line should just have one [answers] group. Please put each question + choices on its own line (problem on line ${i + 1}).`);
             return false;
         }
 
@@ -2899,14 +2993,14 @@ function validateMcqInput(bodyValue) {
         // 1) Duplicate choices?
         const hasDuplicates = new Set(choicesArray).size !== choicesArray.length;
         if (hasDuplicates) {
-            alert(`Please don't use the same answer more than once (problem on line ${i + 1}).`);
+            showAlertModal(`Please don't use the same answer more than once (problem on line ${i + 1}).`);
             return false;
         }
 
         // 2) Too many choices? (more than 4 = more than 3 slashes)
         const slashCount = (matchWithoutBrackets.match(/\//g) || []).length;
         if (slashCount > 3) {
-            alert(`Line ${i + 1} has more than four answer choices. Please use a maximum of four choices per question.`);
+            showAlertModal(`Line ${i + 1} has more than four answer choices. Please use a maximum of four choices per question.`);
             return false;
         }
     }
@@ -3071,13 +3165,13 @@ copyBtn.addEventListener("click", () => {
         selection.removeAllRanges();
 
         if (successful) {
-            alert("Copied to clipboard.");
+            showAlertModal("Copied to clipboard.");
         } else {
-            alert("Copy may not have worked. You can still select the worksheet manually and copy.");
+            showAlertModal("Copy may not have worked. You can still select the worksheet manually and copy.");
         }
     } catch (err) {
         console.error("Copy failed:", err);
-        alert("Sorry, copying failed. You can still select the worksheet manually and copy.");
+        showAlertModal("Sorry, copying failed. You can still select the worksheet manually and copy.");
     }
 });
 
@@ -3147,8 +3241,8 @@ infoBtn.addEventListener("click", () => {
     showMenu(infoMenu);
 })
 
-newWorksheetBtn.addEventListener("click", () => {
-    const confirmed = confirm("Creating a new worksheet will replace the current one. Continue?");
+newWorksheetBtn.addEventListener("click", async () => {
+    const confirmed = await showConfirmModal("Creating a new worksheet will replace the current one. Continue?");
     if (!confirmed) return;
 
     localStorage.removeItem("worksheetData");
@@ -3167,9 +3261,9 @@ newWorksheetBtn.addEventListener("click", () => {
     updateSavingDisabledUI();
 })
 
-loadTemplateWorksheetBtn.addEventListener("click", () => {
+loadTemplateWorksheetBtn.addEventListener("click", async () => {
     if (!isViewingTemplateWorksheet) {
-    const confirmed = confirm("Loading the template worksheet will replace the current one. Continue?");
+    const confirmed = await showConfirmModal("Loading the template worksheet will replace the current one. Continue?");
     if (!confirmed) return;
     }
 
