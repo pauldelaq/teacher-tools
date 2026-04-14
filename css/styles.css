@@ -66,10 +66,6 @@ body {
     color: black;
 }
 
-.top-menu-button:hover {
-    background-color: var(--highlight-color);
-}
-
 .top-menu-button img {
   object-fit: contain;
   pointer-events: none;
@@ -91,10 +87,7 @@ body {
     border: 1px solid;
     border-radius: 8px;
     background-color: lightgray;
-}
-
-.hamburger-menu button:hover {
-    background-color: var(--highlight-color);
+    color: black;
 }
 
 .hamburger-menu {
@@ -172,12 +165,9 @@ body {
 .menu-buttons {
     font-size: 36px;
     padding: 0.25em;
-    border: 1px solid;
+    color: black;
+    border: 1px solid black;
     border-radius: 8px;
-}
-
-.menu-buttons:hover {
-    background-color: var(--highlight-color);
 }
 
 .hidden {
@@ -251,10 +241,7 @@ header {
     font-size: 16px;
     background-color: #efefef;
     border: black 1px solid;
-}
-
-.exercise-type-button:hover {
-    background-color: lightgray;
+    color: black;
 }
 
 .exercise-type {
@@ -319,12 +306,9 @@ header {
     background-color: white;
     height: 50px;
     width: 50px;
+    border: black solid 2px;
     border-radius: 30%;
     user-select: none;
-}
-
-.toolbar-btns:hover {
-    background-color: var(--highlight-color);
 }
 
 .toolbar-btns img {
@@ -335,6 +319,8 @@ header {
     width: 100%;
     height: 8em;
     font-size: 24px;
+    border: 1px solid black;
+    color: black;
 }
 
 .heading-input {
@@ -692,11 +678,63 @@ table.lined td.spacer-row {
 .modal-buttons button {
   padding: 8px 16px;
   border-radius: 6px;
+  color: black;
   border: 1px solid black;
   background: lightgray;
   font-size: 24px;
 }
 
-.modal-buttons button:hover {
-    background-color: var(--highlight-color);
+@media (hover: hover) and (pointer: fine) {
+    .top-menu-button:not(:disabled):hover {
+        background-color: var(--highlight-color);
+    }
+
+    .hamburger-menu button:not(:disabled):hover {
+        background-color: var(--highlight-color);
+    }
+
+    .menu-buttons:not(:disabled):hover {
+        background-color: var(--highlight-color);
+    }
+
+    .exercise-type-button:not(:disabled):hover {
+        background-color: lightgray;
+    }
+
+    .toolbar-btns:not(:disabled):hover {
+        background-color: var(--highlight-color);
+    }
+
+    .modal-buttons button:not(:disabled):hover {
+        background-color: var(--highlight-color);
+    }
+}
+
+/* Pressed feedback for touch devices */
+@media (hover: none) and (pointer: coarse) {
+    .top-menu-button:not(:disabled):active,
+    .hamburger-menu button:not(:disabled):active,
+    .menu-buttons:not(:disabled):active,
+    .exercise-type-button:not(:disabled):active,
+    .toolbar-btns:not(:disabled):active,
+    .modal-buttons button:not(:disabled):active {
+        background-color: var(--highlight-color);
+        transform: scale(0.97);
+    }
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Prevent hover/active effects on disabled buttons */
+button:disabled:hover,
+button:disabled:active {
+    background-color: inherit;
+    transform: none;
+}
+
+textarea {
+    resize: none;
 }

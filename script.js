@@ -455,11 +455,13 @@ function updateSavingDisabledUI() {
         saveEditBtn.disabled = true;
         savingDisabledMenuText.classList.remove("hidden");
         saveWorksheetBtn.disabled = true;
+        loadTemplateWorksheetBtn.disabled = true;
     } else {
         savingDisabledText.classList.add("hidden");
         saveEditBtn.disabled = false;
         savingDisabledMenuText.classList.add("hidden");
         saveWorksheetBtn.disabled = false;
+        loadTemplateWorksheetBtn.disabled = false;
     }
 }
 
@@ -2175,19 +2177,24 @@ function initWorksheet() {
     if (saved) {
         try {
             exerciseBlocks = JSON.parse(saved);
+            isViewingTemplateWorksheet = false;
         } catch (e) {
             console.warn("Exercise data has issues. Using template data.");
             exerciseBlocks = structuredClone(sampleBlocks);
+            isViewingTemplateWorksheet = true;
         }
     } else {
         exerciseBlocks = structuredClone(sampleBlocks);
+        isViewingTemplateWorksheet = true;
     }
 
     renderExerciseBlocks();
-    persistWorksheet();
+    updateSavingDisabledUI();
 }
 
 function persistWorksheet() {
+    if (isViewingTemplateWorksheet) return;
+
     localStorage.setItem(
         "worksheetData",
         JSON.stringify(exerciseBlocks)
@@ -2196,9 +2203,9 @@ function persistWorksheet() {
 
 function loadTemplateWorksheet() {
     exerciseBlocks = structuredClone(sampleBlocks);
-    persistWorksheet();
-    renderExerciseBlocks();
+    localStorage.removeItem("worksheetData");
     isViewingTemplateWorksheet = true;
+    renderExerciseBlocks();
     updateSavingDisabledUI();
 }
 
