@@ -723,6 +723,10 @@ table.lined td.spacer-row {
     }
 }
 
+button:active {
+    transform: scale(0.97);
+}
+
 button:disabled {
     opacity: 0.5;
     cursor: not-allowed;
