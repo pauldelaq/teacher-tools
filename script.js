@@ -2253,7 +2253,7 @@ function createScrambledSentences(data = { heading: "Unscramble the following se
     `;
     setupHeadingToggle();
 
-    exerciseDescription.textContent = "Please type the sentences you wish to use in the text area. Put each sentence on a new line.";
+    exerciseDescription.innerHTML = `Checklist<br><ul class="checklist"><li>Please type the sentences you wish to use in the text area.</li><li>Put each sentence on a new line.</li></ul>`;
 
     const numberedChecked = data.numbered ? "checked" : "";
     const answerChecked = data.showAnswerLines ? "checked" : "";
@@ -2296,7 +2296,7 @@ function createBlanksPassage(data = { heading: "Please fill in the blanks with a
         `;
     setupHeadingToggle();
 
-    exerciseDescription.textContent = "Please type your passage in the text area. Include [square brackets] around the words you'd like to remove.";
+    exerciseDescription.innerHTML = `Checklist<br><ul class="checklist"><li>Please type your passage in the text area.</li><li>Include [square brackets] around the words you'd like to remove.</li></ul>`;
 
     const showWordListChecked = data.showWordList ? "checked" : "";
 
@@ -2332,7 +2332,7 @@ function createWordMatching(data = { heading: "Match words to create phrases.", 
     `;
     setupHeadingToggle();
 
-    exerciseDescription.textContent = "Please type the phrases you want split with slashes. Add any additional phrases on a new line.";
+    exerciseDescription.innerHTML = `Checklist<br><ul class="checklist"><li>Please type the phrases you want split with slashes.</li><li>Add any additional phrases on a new line.</li></ul>`;
 
     const numberedChecked = data.numbered ? "checked" : "";
 
@@ -2354,7 +2354,7 @@ function createClozeTest(data = { heading: "Read the passage and choose the corr
     `;
     setupHeadingToggle();
 
-    exerciseDescription.textContent = "Please type the passage you wish to use in the text area. Enclose each word you want removed in square brackets separated by slashes for each possible choice, [like/this]. The first option must be the correct answer.  Use a maximum of four possible choices."
+    exerciseDescription.innerHTML = `Checklist<br><ul class="checklist"><li>Please type the passage you wish to use in the text area.</li><li>Enclose each word you want removed in square brackets.</li><li>Separate each possible choice with slashes, [like/this].</li><li>The first option must be the correct answer.</li><li>Use a maximum of four possible choices.</li></ul>`
 
     editorBody.innerHTML = `
         <textarea class="text-box" placeholder="Cats typically have [two/three/four/six] ears. They generally like to eat [fish/cabbage/onions/pickles]. In cartoons, they often drink [milk/cola/tea/beer], but this is not realistic. Typically, they simply drink [water/tea/cola/wine].">${data.text || ""}</textarea>
@@ -2500,8 +2500,7 @@ function createWordGrid(data = {
     `;
     setupHeadingToggle();
 
-    exerciseDescription.textContent =
-        "Type values into the grid. Check the boxes for cells that should become blanks in the exercise.";
+    exerciseDescription.innerHTML = `Checklist<br><ul class="checklist"><li>Type values into the grid.</li><li>Check the boxes for cells that should become blanks in the exercise.</li></ul>`;
 
     // --- Size + heading row/col controls ---
     const initialRows =
@@ -2797,7 +2796,7 @@ function createScrambledWords(data = { heading: "Please answer in complete sente
     `;
     setupHeadingToggle();
 
-    exerciseDescription.textContent = "Please type the sentences you wish to use in the text area. Put each sentence on a new line.";
+    exerciseDescription.innerHTML = `Checklist<br><ul class="checklist"><li>Please type the sentences you wish to use in the text area.</li><li>Put each sentence on a new line.</li></ul>`;
 
     const numberedChecked = data.numbered ? "checked" : "";
     const answerChecked = data.showAnswerLines ? "checked" : "";
@@ -2873,7 +2872,7 @@ function createEssayQuestion(data = { heading: "Please answer in complete senten
     `;
     setupHeadingToggle();
 
-    exerciseDescription.textContent = "Please enter your essay questions in the text area. Put each question on a new line.";
+    exerciseDescription.innerHTML = `Checklist<br><ul class="checklist"><li>Please enter your essay questions in the text area.</li><li>Put each question on a new line.</li></ul>`;
 
     const typeValue = data.answerBoxType || "lined";
     const sizeValue = data.answerBoxSize || "paragraph";
@@ -2934,7 +2933,7 @@ function createMultipleChoiceQuestions(data = { heading: "Choose the correct ans
         <input type="checkbox" id="headingCheckbox" ${headingChecked}><label for="headingCheckbox"> Include Instruction</label>
     `;
 
-    exerciseDescription.textContent = "Please type the questions you wish to use in the text area, followed by a list of answers in square brackets separated by slashes, [like/this]. The first option must be the correct answer. Add any additional questions on a new line. Use a maximum of four possible answers.";
+    exerciseDescription.innerHTML = `Checklist<br><ul class="checklist"><li>Please type the questions you wish to use in the text area.</li><li>Follow each question with a list of answers in square brackets.</li><li>Separate each option with slashes, [like/this].</li><li>The first option must be the correct answer.</li><li>Add any additional questions on a new line.</li><li>Use a maximum of four possible answers.</li>`;
 
     const numberedChecked = data.numbered ? "checked" : "";
 
@@ -3023,7 +3022,7 @@ function createLetterRemoval(data = { heading: "Please fill in the missing lette
         <input type="checkbox" id="headingCheckbox" ${headingChecked}><label for="headingCheckbox"> Include Instruction</label>
     `;
 
-    exerciseDescription.textContent = "Please type the sentences you wish to use in the text area. Add any additional sentences on a new line.";
+    exerciseDescription.innerHTML = `Checklist<br><ul class="checklist"><li>Please type the sentences you wish to use in the text area.</li><li>Add any additional sentences on a new line.</li></ul>`;
 
     const numberedChecked = data.numbered ? "checked" : "";
     const preserveInitialChecked = data.preserveInitial ? "checked" : "";
@@ -3140,6 +3139,11 @@ function makeLetterRemovalQuestions(text, options = {}) {
 
 let exerciseMenuOpen = false;
 addExerciseBtn.addEventListener("click", () => {
+    if (isViewingTemplateWorksheet) {
+        showAlertModal("Please create a new worksheet before adding exercises.")
+        return;
+    }
+
     showMenu(createExerciseMenu);
 
     // When the exercise menu is open, hide the main toolbar buttons and show the close button.
@@ -3197,6 +3201,7 @@ closeEditingInterface.addEventListener("click", () => {
     closeMenu(editingInterface);
     setToolbarButtons();
     setOverlayOpen(false);
+    exerciseMenuOpen = false;
 });
 
 saveEditBtn.addEventListener("click", () => saveEdit());
@@ -3252,11 +3257,12 @@ newWorksheetBtn.addEventListener("click", async () => {
     const confirmed = await showConfirmModal("Creating a new worksheet will replace the current one. Continue?");
     if (!confirmed) return;
 
-    localStorage.removeItem("worksheetData");
+    isViewingTemplateWorksheet = false;
     exerciseBlocks = [];
     currentViewMode = "student";
-    renderExerciseBlocks();
+
     persistWorksheet();
+    renderExerciseBlocks();
 
     closeMenu(hamburgerMenu);
     closeMenu(editingInterface);
@@ -3264,9 +3270,8 @@ newWorksheetBtn.addEventListener("click", async () => {
     setOverlayOpen(false);
     hamburgerMenuBtn.innerHTML = `<img src="./assets/menu.svg">`;
     hamburgerMenuOpen = false;
-    isViewingTemplateWorksheet = false;
     updateSavingDisabledUI();
-})
+});
 
 loadTemplateWorksheetBtn.addEventListener("click", async () => {
     if (!isViewingTemplateWorksheet) {

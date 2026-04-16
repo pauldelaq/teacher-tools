@@ -742,3 +742,7 @@ button:disabled:active {
 textarea {
     resize: none;
 }
+
+.checklist {
+    list-style-type: disc;
+}
