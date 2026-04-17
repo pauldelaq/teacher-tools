@@ -373,10 +373,24 @@ async function saveWorksheetToFile() {
     const exportData = buildWorksheetExportData();
     const json = JSON.stringify(exportData, null, 2);
 
+    // Determine filename from first title block (if available)
+    let fileBaseName = null;
+    const titleBlock = exerciseBlocks.find(b => b.type === "title" && b.data && b.data.text);
+
+    if (titleBlock) {
+        fileBaseName = titleBlock.data.text
+            .trim()
+            .replace(/[\\/:*?"<>|]/g, "") // remove invalid filename chars
+            .replace(/\s+/g, "-");
+    }
+
+    const fallbackName = `my-worksheet-${new Date().toISOString().slice(0, 10)}`;
+    const finalFileName = (fileBaseName || fallbackName) + ".json";
+
     if ("showSaveFilePicker" in window) {
         try {
             const handle = await window.showSaveFilePicker({
-                suggestedName: `my-worksheet-${new Date().toISOString().slice(0, 10)}.json`,
+                suggestedName: finalFileName,
                 types: [
                     {
                         description: "JSON Files",
@@ -404,7 +418,7 @@ async function saveWorksheetToFile() {
 
     const link = document.createElement("a");
     link.href = url;
-    link.download = `my-worksheet-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = finalFileName;
 
     document.body.appendChild(link);
     link.click();
@@ -467,10 +481,19 @@ function updateSavingDisabledUI() {
 
 function showMenu(el) {
     el.classList.remove("hidden");
+    el.scrollTop = 0;
+    el.scrollLeft = 0;
+
+    requestAnimationFrame(() => {
+        el.scrollTop = 0;
+        el.scrollLeft = 0;
+    });
 }
 
 function closeMenu(el) {
     el.classList.add("hidden");
+    el.scrollTop = 0;
+    el.scrollLeft = 0;
 }
 
 function updateHeaderTitle() {

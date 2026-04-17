@@ -506,8 +506,8 @@ label {
     vertical-align: top;
 }
 
-.left-space {
-    padding-left: 1em;
+.content-message {
+    text-align: center;
 }
 
 .lined {
@@ -745,4 +745,8 @@ textarea {
 
 .checklist {
     list-style-type: disc;
+}
+
+.save-and-close {
+    text-align: center;
 }
