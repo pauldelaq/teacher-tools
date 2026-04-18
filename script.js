@@ -37,6 +37,8 @@ let currentEditingType = null;
 let currentViewMode = "student";
 let exerciseBlocks = [];
 let isViewingTemplateWorksheet = !localStorage.getItem("worksheetData");
+let editorInitialState = null;
+let hasMadeChanges = false;
 const sampleBlocks = [
  {
     id: 1,
@@ -472,11 +474,53 @@ function updateSavingDisabledUI() {
         loadTemplateWorksheetBtn.disabled = true;
     } else {
         savingDisabledText.classList.add("hidden");
-        saveEditBtn.disabled = false;
+        saveEditBtn.disabled = !hasMadeChanges;
         savingDisabledMenuText.classList.add("hidden");
         saveWorksheetBtn.disabled = false;
         loadTemplateWorksheetBtn.disabled = false;
     }
+}
+
+function getEditorStateSnapshot() {
+    const controls = editingInterface.querySelectorAll("textarea, input, select");
+
+    return Array.from(controls).map((el) => {
+        const key = el.id || el.name || el.type;
+
+        if (el.type === "checkbox" || el.type === "radio") {
+            return {
+                key,
+                type: el.type,
+                checked: el.checked
+            };
+        }
+
+        return {
+            key,
+            type: el.type,
+            value: el.value
+        };
+    });
+}
+
+function refreshEditorDirtyState() {
+    if (!editorInitialState) {
+        hasMadeChanges = false;
+    } else {
+        const currentState = getEditorStateSnapshot();
+        hasMadeChanges =
+            JSON.stringify(currentState) !== JSON.stringify(editorInitialState);
+    }
+
+    updateSavingDisabledUI();
+}
+
+function resetEditorDirtyState() {
+    requestAnimationFrame(() => {
+        editorInitialState = getEditorStateSnapshot();
+        hasMadeChanges = false;
+        updateSavingDisabledUI();
+    });
 }
 
 function showMenu(el) {
@@ -1548,6 +1592,7 @@ function openEditorForType(caption, fn, typeId) {
     fn();
     hideToolbarButtons();
     hamburgerMenuBtn.classList.add("hidden");
+    resetEditorDirtyState();
 }
 
 async function saveEdit() {
@@ -2058,6 +2103,7 @@ async function saveEdit() {
 
     renderExerciseBlocks();
     persistWorksheet();
+    resetEditorDirtyState();
     showAlertModal("Saved");
 }
 
@@ -2091,6 +2137,7 @@ function editExercise(blockId) {
         editorArg = block.data || {};
     }
 
+    resetEditorDirtyState();
     typeConfig.buttonFunction(editorArg);
     updateSavingDisabledUI();
     hideToolbarButtons();
@@ -3220,7 +3267,15 @@ closeExerciseMenuBtn.addEventListener("click", () => {
     exerciseMenuOpen = false;
 });
 
-closeEditingInterface.addEventListener("click", () => {
+closeEditingInterface.addEventListener("click", async () => {
+    if (hasMadeChanges) {
+        const confirmed = await showConfirmModal("You have unsaved changes. Close without saving?");
+        if (!confirmed) return;
+    }
+
+    editorInitialState = null;
+    hasMadeChanges = false;
+
     closeMenu(editingInterface);
     setToolbarButtons();
     setOverlayOpen(false);
@@ -3312,6 +3367,14 @@ loadTemplateWorksheetBtn.addEventListener("click", async () => {
     updateSavingDisabledUI();
 }
 );
+
+editingInterface.addEventListener("input", () => {
+    refreshEditorDirtyState();
+});
+
+editingInterface.addEventListener("change", () => {
+    refreshEditorDirtyState();
+});
 
 window.addEventListener('resize', updateHeaderTitle);
 
